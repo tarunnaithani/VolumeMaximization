@@ -32,12 +32,23 @@ class OrderBookTest {
 	}
 	
 	@Test
+	void testDuplicateOrder() {
+		OrderBook book = new OrderBook(10);
+		Order order = createBuyOrder(2000, 100.0004);
+		assertEquals(true, book.addOrder(order));
+		assertEquals(false,book.addOrder(order));
+
+		compare("Buy				|	Sell \n" + 
+				"2000@100.0004	| 		   ", book);
+	}
+	
+	@Test
 	void testMultipleBuyOrder() {
 		OrderBook book = new OrderBook(10);
-		book.addOrder(createBuyOrder(2000, 100.0004));
-		book.addOrder(createBuyOrder(2000, 100.0003) );
-		book.addOrder(createBuyOrder(2000, 100.0001) );
-		book.addOrder(createBuyOrder(2000, 100.0001));
+		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0004)));
+		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0003)));
+		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0001)));
+		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0001)));
 
 		compare("Buy				|	Sell \n" + 
 				"2000@100.0004	| 		 \n" + 
@@ -48,10 +59,10 @@ class OrderBookTest {
 	@Test
 	void testMultipleSellOrder() {
 		OrderBook book = new OrderBook(10);
-		book.addOrder(createSellOrder(2000, 100.0001));
-		book.addOrder(createSellOrder(2000, 100.0001));
-		book.addOrder(createSellOrder(2000, 100.0002));
-		book.addOrder(createSellOrder(2000, 100.0003));
+		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0001)));
+		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0001)));
+		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0002)));
+		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0003)));
 
 		compare("Buy		|	Sell			\n" + 
 				"		| 2000@100.0003	\n" + 
@@ -84,14 +95,41 @@ class OrderBookTest {
 	void testOneOrderWithCancel() {
 		OrderBook book = new OrderBook(10);
 		Order order = createBuyOrder(2000, 100.0004);
-		book.addOrder(order);
+		assertEquals(true, book.addOrder(order));
 		
 		compare("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
-		book.cancelOrder(order);
-		System.out.println(book);
+		assertEquals(true, book.cancelOrder(order));
 		compare("", book);
+	}
+	
+	@Test
+	void testOneOrderWithCancelWithInvalidId() {
+		OrderBook book = new OrderBook(10);
+		Order order = createBuyOrder(2000, 100.0004);
+		assertEquals(true, book.addOrder(order));
+		
+		compare("Buy				|	Sell			\n" + 
+				"2000@100.0004	| 		 		\n" 	, book);
+		
+		assertEquals(false, book.cancelOrder(createBuyOrder(2000, 100.0004)));
+		compare("Buy				|	Sell			\n" + 
+				"2000@100.0004	| 		 		\n" 	, book);
+	}
+	
+	@Test
+	void testOneOrderCancelWithInvalidPrice() {
+		OrderBook book = new OrderBook(10);
+		Order order = createBuyOrder(2000, 100.0004);
+		assertEquals(true, book.addOrder(order));
+		
+		compare("Buy				|	Sell			\n" + 
+				"2000@100.0004	| 		 		\n" 	, book);
+		
+		assertEquals(false, book.cancelOrder(new Order(order.getOrderId(), order.getSymbol(), order.getSide(), order.getQuantity(), 100.00)));
+		compare("Buy				|	Sell			\n" + 
+				"2000@100.0004	| 		 		\n" 	, book);
 	}
 	
 	@Test
@@ -100,15 +138,15 @@ class OrderBookTest {
 		Order o1 = createBuyOrder(2000, 100.0004);
 		Order o2 = createBuyOrder(2000, 100.0004);
 		Order o3 = createBuyOrder(2000, 100.0004); 
-		book.addOrder(o1);
-		book.addOrder(o2);
-		book.addOrder(o3);
+		assertEquals(true, book.addOrder(o1));
+		assertEquals(true, book.addOrder(o2));
+		assertEquals(true, book.addOrder(o3));
 		
 		
 		compare("Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		book.cancelOrder(o1);
+		assertEquals(true, book.cancelOrder(o1));
 		compare("Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
 	}

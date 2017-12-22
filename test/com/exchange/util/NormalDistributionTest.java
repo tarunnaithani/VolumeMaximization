@@ -1,29 +1,30 @@
 package com.exchange.util;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
+
+import com.exchange.ProblemRunner;
+import com.exchange.data.Order;
+import com.exchange.data.Side;
 
 class NormalDistributionTest {
 	
 	@Test
-	void test() {
+	void testOrderCreationUsingNormalDistribution() {
 		
-		int totalCount = 2000000;	
-		double[] values = new double[totalCount];
-		double sum = 0.0;
+		Order order = ProblemRunner.createOrderFromDistribution(Side.Buy);
+		assertNotNull(order);
+		assertEquals(true, order.getPrice() > 0);
+		assertEquals(true, order.getQuantity() > 0);
+		assertEquals(true, order.getTimestamp() > 0);
 		
-		for(int i=0; i< totalCount; i++) {
-			values[i] = NormalDistribution.getDouble(1.0, 0, 1);
-			sum = sum + values[i];
-		}
-		double mean = sum/ totalCount;
-		System.out.println("Mean," + mean);
-		sum = 0.0;
-		for(double val: values) {
-			sum = sum + Math.pow(mean - val, 2);
-		}
-		
-		double std = Math.sqrt(sum/ totalCount);
-		System.out.println("srd deviation," + std);
+		order = ProblemRunner.createOrderFromDistribution(Side.Sell);
+		assertNotNull(order);
+		assertEquals(true, order.getPrice() > 0);
+		assertEquals(true, order.getQuantity() > 0);
+		assertEquals(true, order.getTimestamp() > 0);
 	}
 
 }

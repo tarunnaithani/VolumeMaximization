@@ -19,6 +19,7 @@ public class Order {
 	/** Limit price for the order */
 	private final double price;
 
+	/** Time when order was created */
 	private long timestamp = 0;
 
 	public Order(int orderId, String symbol, Side side, long quantity, double price) {
@@ -60,8 +61,8 @@ public class Order {
 
 	@Override
 	public String toString() {
-		return "Order [orderId=" + orderId + ", symbol=" + symbol + ", side=" + side + ", quantity=" + quantity
-				+ ", price=" + price + ", timestamp=" + new Date(timestamp) + "]";
+		return "Order [orderId=" + orderId + ", timestamp=" + new Date(timestamp) + ", symbol=" + symbol + ", side=" + side + ", quantity=" + quantity
+				+ ", price=" + price + "]";
 	}	
 	
 	

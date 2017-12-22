@@ -36,22 +36,18 @@ public class OrderBook {
 		this.orderStore = new HashMap<>();
 	}
 
-	public void addOrder(Order order) {
+	public boolean addOrder(Order order) {
 		if (order.getSide() == Side.Buy)
-			addOrder(order, bids, bidMap);
-		else if (order.getSide() == Side.Sell)
-			addOrder(order, asks, askMap);
-		else
-			throw new IllegalArgumentException("Side not supported");
+			return addOrder(order, bids, bidMap);
+		else 
+			return addOrder(order, asks, askMap);
 	}
 
-	public void cancelOrder(Order order) {
+	public boolean cancelOrder(Order order) {
 		if (order.getSide() == Side.Buy)
-			removeOrder(order, bids, bidMap);
-		else if (order.getSide() == Side.Sell)
-			removeOrder(order, asks, askMap);
-		else
-			throw new IllegalArgumentException("Side not supported");
+			return removeOrder(order, bids, bidMap);
+		else 
+			return removeOrder(order, asks, askMap);
 	}
 	/**
 	 * Add order to the book
@@ -63,16 +59,17 @@ public class OrderBook {
 	 * @param map
 	 *            price order map for the side
 	 */
-	private void addOrder(Order order, PriorityQueue<PriceLevel> queue,	HashMap<Long, PriceLevel> map) {
+	private boolean addOrder(Order order, PriorityQueue<PriceLevel> queue,	HashMap<Long, PriceLevel> map) {
+		long price = (long)(order.getPrice() * Constants.MAX_DECIMAL_PRECISION);
 		if(orderStore.containsKey(order.getOrderId()))
-			return;
+			return false;
 		
 		orderStore.put(order.getOrderId(), order);
 
-		if (map.containsKey(order.getPrice())) {
+		if (map.containsKey(price)) {
 			// If price level already exists, add order to linked list
 			OrderEntry newOrderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), order.getPrice());
-			OrderEntry entry = orderEntries.get(map.get(order.getPrice()).orderEntry.orderId);
+			OrderEntry entry = orderEntries.get(map.get(price).orderEntry.orderId);
 			// Find last order
 			while (entry.getNext() != -1)
 				entry = orderEntries.get(entry.getNext());
@@ -82,13 +79,14 @@ public class OrderBook {
 			orderEntries.put(newOrderEntry.getOrderId(), newOrderEntry);
 		} else {
 			// If price level does not exists add new entry to map and queue
-			PriceLevel priceLevel = new PriceLevel(order.getPrice());
+			PriceLevel priceLevel = new PriceLevel(price);
 			OrderEntry orderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), order.getPrice());
 			orderEntries.put(order.getOrderId(), orderEntry);
 			priceLevel.setOrderEntry(orderEntry);
-			map.put(order.getPrice(), priceLevel);
+			map.put(price, priceLevel);
 			queue.add(priceLevel);
 		}
+		return true;
 	}
 
 	/**
@@ -101,23 +99,23 @@ public class OrderBook {
 	 * @param map
 	 *            price order map for the side
 	 */
-	private void removeOrder(Order order, PriorityQueue<PriceLevel> queue,
+	private boolean removeOrder(Order order, PriorityQueue<PriceLevel> queue,
 			HashMap<Long, PriceLevel> map) {
-
+		long price = (long)(order.getPrice() * Constants.MAX_DECIMAL_PRECISION);
 		if(!orderStore.containsKey(order.getOrderId()))
-			return;
+			return false;
 		
 		
-		if(!map.containsKey(order.getPrice())) {
-			return;
+		if(!map.containsKey(price)) {
+			return false;
 		}
 		
-		PriceLevel priceLevel = map.get(order.getPrice());
+		PriceLevel priceLevel = map.get(price);
 		OrderEntry orderEntry = priceLevel.getOrderEntry();
 		if (orderEntry.orderId == order.getOrderId() && orderEntry.getNext() == -1) {
 			// if it is only order entry at the price level then remove it
-			queue.remove(new PriceLevel(order.getPrice()));
-			map.remove(order.getPrice());
+			queue.remove(new PriceLevel(price));
+			map.remove(price);
 		} else if (orderEntry.orderId == order.getOrderId() && orderEntry.getNext() != -1) {
 			// if it is first order entry in linked list
 			priceLevel.setOrderEntry(orderEntries.get(orderEntry.getNext()));
@@ -139,6 +137,7 @@ public class OrderBook {
 			orderEntries.remove(orderEntry.getOrderId());
 		}
 		orderStore.remove(order.getOrderId());
+		return true;
 	}
 
 	

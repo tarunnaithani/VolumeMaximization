@@ -29,7 +29,7 @@ public class ProblemRunner {
 
 	}
 
-	private static Order createOrderFromDistribution(Side side) {
+	public static Order createOrderFromDistribution(Side side) {
 		long qty = NormalDistribution.getLong(STD_DEV_QTY_DISTRIBUTION, MEAN_QTY_DISTRIBUTION);
 		double price = NormalDistribution.getDouble(STD_DEV_PRICE_DISTRIBUTION, MEAN_PRICE_DISTRIBUTION, DEFAULT_PRICE_PRECISION);
 		
