@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import com.exchange.ExchangeConstants;
 import com.exchange.common.TestHelper;
 import com.exchange.data.Order;
 
@@ -81,6 +82,25 @@ class OrderBookTest extends TestHelper{
 				"6000@100.0001	| 2000@100.0001	", orderBook);
 	}
 
+	@Test
+	void testMaxMinDecimalPrecisionInPrice() {
+		OrderBook orderBook = new OrderBook(10);
+		double minPrecision = (double)1/ExchangeConstants.MAX_DECIMAL_PRECISION;
+		double maxPrecision = (double)1/(ExchangeConstants.MAX_DECIMAL_PRECISION * 10) - minPrecision;
+		double minPrice = 1 + minPrecision;
+		double maxPrice = 1 + maxPrecision;
+		addOrderToBookWithSuccess(createBuyOrder(2000, minPrice), orderBook);
+		addOrderToBookWithSuccess(createBuyOrder(2000, maxPrice), orderBook);
+		
+		addOrderToBookWithSuccess(createSellOrder(2000, minPrice), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, maxPrice), orderBook);
+
+		assertOrderBookAsExpected("Buy		 |	Sell\n" + 
+								"2000@1.0001	 | 2000@1.0001	\n" + 
+								"2000@0.9999	 | 2000@0.9999", orderBook);
+	}
+	
+	
 	@Test
 	void testOneOrderWithCancel() {
 		OrderBook book = new OrderBook(10);

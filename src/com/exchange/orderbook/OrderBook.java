@@ -1,6 +1,5 @@
 package com.exchange.orderbook;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.TreeSet;
 
@@ -18,24 +17,23 @@ public class OrderBook {
 	private final HashMap<Integer, OrderEntry> orderEntries;
 	
 	/** Sorted tree to store all bid prices with maximum as first as head */
-	private final TreeSet<PriceLevel> bids;
-	/** map containing all Bid-Prices and corresponding PriceLevel entry on the order book */
-	private final HashMap<Long, PriceLevel> bidMap;
+	private final TreeSet<Long> bids;
+	/** map containing all Bid-Prices and corresponding First OrderEntry by arrival on the order book */
+	private final HashMap<Long, OrderEntry> bidMap;
 
 	/** Sorted tree to store all ask prices with minimum as first as head */
-	private final TreeSet<PriceLevel> asks;
-	/** map containing all Ask-Prices and corresponding PriceLevel entry on the order book */
-	private final HashMap<Long, PriceLevel> askMap;
+	private final TreeSet<Long> asks;
+	/** map containing all Ask-Prices and corresponding First OrderEntry by arrival on the order book */
+	private final HashMap<Long, OrderEntry> askMap;
 
 	public OrderBook(int capacity) {
-		this.bids = new TreeSet<>(new PriceMaxComparator());
+		this.bids = new TreeSet<>(Side.Buy.getComparator());
 		this.bidMap = new HashMap<>(capacity);
 
-		this.asks = new TreeSet<>(new PriceMinComparator());
+		this.asks = new TreeSet<>(Side.Sell.getComparator());
 		this.askMap = new HashMap<>(capacity);
 
 		this.orderEntries = new HashMap<>(capacity);
-		
 	}
 
 	public boolean addOrder(Order order) {
@@ -53,102 +51,110 @@ public class OrderBook {
 	}
 
 
-	private boolean addOrder(Order order, TreeSet<PriceLevel> queue,	HashMap<Long, PriceLevel> map) {
+	private boolean addOrder(Order order, TreeSet<Long> prices,	HashMap<Long, OrderEntry> priceMap) {
 		if(orderEntries.containsKey(order.getOrderId()))
 			return false;
 
 		long price = (long)(order.getPrice() * ExchangeConstants.MAX_DECIMAL_PRECISION);
-		if (map.containsKey(price)) {
+		if (priceMap.containsKey(price)) {
 			// If price level already exists, add order to end of the linked list
-			OrderEntry newOrderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), order.getPrice());
-			OrderEntry entry = orderEntries.get(map.get(price).orderEntry.orderId);
+			OrderEntry newOrderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), price);
+			OrderEntry entry = orderEntries.get(priceMap.get(price).orderId);
 			// Find last order
-			while (entry.getNext() != -1)
-				entry = orderEntries.get(entry.getNext());
+			while (entry.next != -1)
+				entry = orderEntries.get(entry.next);
 			// Add order entry to doubly linked list
-			entry.setNext(newOrderEntry.getOrderId());
-			newOrderEntry.setPrev(entry.getOrderId());
-			orderEntries.put(newOrderEntry.getOrderId(), newOrderEntry);
+			entry.next = newOrderEntry.orderId;
+			newOrderEntry.prev = entry.orderId;
+			orderEntries.put(newOrderEntry.orderId, newOrderEntry);
 		} else {
 			// If price level does not exists add new entry to map and set
-			PriceLevel priceLevel = new PriceLevel(price);
-			OrderEntry orderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), order.getPrice());
+			OrderEntry orderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), price);
 			orderEntries.put(order.getOrderId(), orderEntry);
-			priceLevel.setOrderEntry(orderEntry);
-			map.put(price, priceLevel);
-			queue.add(priceLevel);
+			priceMap.put(price, orderEntry);
+			prices.add(price);
 		}
 		return true;
 	}
 
 
-	private boolean removeOrder(Order order, TreeSet<PriceLevel> queue,
-			HashMap<Long, PriceLevel> map) {
+	private boolean removeOrder(Order order, TreeSet<Long> prices,
+			HashMap<Long, OrderEntry> priceMap) {
 		long price = (long)(order.getPrice() * ExchangeConstants.MAX_DECIMAL_PRECISION);
 		if(!orderEntries.containsKey(order.getOrderId()))
 			return false;
 		
-		if(!map.containsKey(price)) {
+		if(!priceMap.containsKey(price)) {
 			return false;
 		}
 		
-		PriceLevel priceLevel = map.get(price);
-		OrderEntry orderEntry = priceLevel.getOrderEntry();
-		if (orderEntry.orderId == order.getOrderId() && orderEntry.getNext() == -1) {
+		OrderEntry orderEntry = priceMap.get(price);
+		if (orderEntry.orderId == order.getOrderId() && orderEntry.next == -1) {
 			// if it is only order entry at the price level then remove it
-			queue.remove(new PriceLevel(price));
-			map.remove(price);
-		} else if (orderEntry.orderId == order.getOrderId() && orderEntry.getNext() != -1) {
+			prices.remove(price);
+			priceMap.remove(price);
+		} else if (orderEntry.orderId == order.getOrderId() && orderEntry.next != -1) {
 			// if it is first order entry in linked list
-			priceLevel.setOrderEntry(orderEntries.get(orderEntry.getNext()));
-			orderEntries.remove(orderEntry.getOrderId());
+			orderEntry = orderEntries.remove(orderEntry.orderId);
+			priceMap.put(price, orderEntries.get(orderEntry.next));
+			orderEntries.remove(orderEntry.orderId);
 		} else {
 			// if order is somewhere in the linked list
-			while (orderEntry.getOrderId() != order.getOrderId() && orderEntry != null) {
-				orderEntry = orderEntries.get(orderEntry.getNext());
+			while (orderEntry.orderId != order.getOrderId() && orderEntry != null) {
+				orderEntry = orderEntries.get(orderEntry.next);
 			}
 			// Change next pointer
 			
-			OrderEntry prevEntry = orderEntries.get(orderEntry.getPrev());
-			prevEntry.setNext(orderEntry.getNext());
-			if (orderEntry.getNext() != -1) {
-				OrderEntry nextEntry = orderEntries.get(orderEntry.getNext());
+			OrderEntry prevEntry = orderEntries.get(orderEntry.prev);
+			prevEntry.next = orderEntry.next;
+			if (orderEntry.next != -1) {
+				OrderEntry nextEntry = orderEntries.get(orderEntry.next);
 				// Change previous pointer
-				nextEntry.setPrev(orderEntry.getPrev());
+				nextEntry.prev = orderEntry.prev;
 			}
-			orderEntries.remove(orderEntry.getOrderId());
+			orderEntries.remove(orderEntry.orderId);
 		}
 		return true;
 	}
 
-	
+	public HashMap<Integer, OrderEntry> getOrderEntries() {
+		return orderEntries;
+	}
+
+	public TreeSet<Long> getBids() {
+		return bids;
+	}
+
+	public TreeSet<Long> getAsks() {
+		return asks;
+	}
 
 	@Override
 	public String toString() {
 		if (bids.size() == 0 && asks.size() == 0)
 			return "";
-		TreeSet<PriceLevel> allPrices = new TreeSet<>(new PriceMaxComparator());
-		for(PriceLevel price: bids)
-			if(!allPrices.contains(price)) 
+		TreeSet<Long> allPrices = new TreeSet<>(Side.Buy.getComparator());
+		for(Long price: bids)
+			if(!allPrices.contains(price))
 				allPrices.add(price);
-		for(PriceLevel price: asks)
-			if(!allPrices.contains(price)) 
+		for(Long price: asks)
+			if(!allPrices.contains(price))
 				allPrices.add(price);
 		
 		StringBuffer buffer = new StringBuffer(1024);
 		buffer.append("Buy").append("\t\t|\t").append("Sell");
-		for (PriceLevel priceLevel: allPrices) {
+		for (Long price: allPrices) {
 			buffer.append("\n");
 			// If bid level exists, print it
-			if (bidMap.containsKey(priceLevel.getPrice()))
+			if (bidMap.containsKey(price))
 			{
-				OrderEntry entry = bidMap.get(priceLevel.getPrice()).orderEntry;
+				OrderEntry entry = bidMap.get(price);
 				long totalQuantity = entry.getAvailableQty();
-				while (entry.getNext() != -1) {
-					entry = orderEntries.get(entry.getNext());
+				while (entry.next != -1) {
+					entry = orderEntries.get(entry.next);
 					totalQuantity = totalQuantity + entry.getAvailableQty();
 				}
-				buffer.append(totalQuantity + "@" + new Double(priceLevel.getPrice())/ExchangeConstants.MAX_DECIMAL_PRECISION);
+				buffer.append(totalQuantity + "@" + new Double(price)/ExchangeConstants.MAX_DECIMAL_PRECISION);
 				buffer.append("\t");
 			}
 			else
@@ -156,89 +162,24 @@ public class OrderBook {
 			
 			buffer.append(" | ");
 			// If ask level exists, print it
-			if (askMap.containsKey(priceLevel.getPrice()))
+			if (askMap.containsKey(price))
 			{
-				OrderEntry entry = askMap.get(priceLevel.getPrice()).orderEntry;
+				OrderEntry entry = askMap.get(price);
 				long totalQuantity = entry.getAvailableQty();
-				while (entry.getNext() != -1) {
-					entry = orderEntries.get(entry.getNext());
+				while (entry.next != -1) {
+					entry = orderEntries.get(entry.next);
 					totalQuantity = totalQuantity + entry.getAvailableQty();
 				}
-				buffer.append(totalQuantity + "@" + new Double(priceLevel.getPrice())/ExchangeConstants.MAX_DECIMAL_PRECISION);
+				buffer.append(totalQuantity + "@" + new Double(price)/ExchangeConstants.MAX_DECIMAL_PRECISION);
 				buffer.append("\t");
 			}
 			else
 				buffer.append("\t\t ");
 		}
-
+		
 		return buffer.toString();
 	}
 
-	private class PriceMinComparator implements Comparator<PriceLevel> {
-		@Override
-		public int compare(PriceLevel o1, PriceLevel o2) {
-			if(o2.price == o1.price)
-				return 0;
-			else if(o2.price > o1.price)
-				return -1;
-			else
-				return 1;
-		}
-	}
-
-	private class PriceMaxComparator implements Comparator<PriceLevel> {
-		@Override
-		public int compare(PriceLevel o1, PriceLevel o2) {
-			if(o2.price == o1.price)
-				return 0;
-			else if(o2.price > o1.price)
-				return 1;
-			else
-				return -1;
-		}
-	}
-	
-	private class PriceLevel{
-		private final long price;
-		private OrderEntry orderEntry;
-		
-		public PriceLevel(long price) {
-			this.price = price;
-		}
-
-		public OrderEntry getOrderEntry() {
-			return orderEntry;
-		}
-
-		public void setOrderEntry(OrderEntry orderEntry) {
-			this.orderEntry = orderEntry;
-		}
-
-		public long getPrice() {
-			return price;
-		}
-
-		@Override
-		public int hashCode() {
-			return (int) price;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			PriceLevel other = (PriceLevel) obj;
-			if (price != other.price)
-				return false;
-			return true;
-		}
-		
-	}
-	
 	private class OrderEntry{
 		/** Unique id for the order */
 		private final int orderId;
@@ -267,43 +208,12 @@ public class OrderBook {
 			return quantity - cumQty;
 		}
 
-		public long getQuantity() {
-			return quantity;
-		}
-
 		public void setQuantity(long quantity) {
 			this.quantity = quantity;
-		}
-
-		public long getCumQty() {
-			return cumQty;
 		}
 
 		public void setCumQty(long cumQty) {
 			this.cumQty = cumQty;
 		}
-
-		public int getNext() {
-			return next;
-		}
-
-		public void setNext(int next) {
-			this.next = next;
-		}
-
-		public int getPrev() {
-			return prev;
-		}
-
-		public void setPrev(int prev) {
-			this.prev = prev;
-		}
-
-		public int getOrderId() {
-			return orderId;
-		}
-		
-
-		
 	}
 }
