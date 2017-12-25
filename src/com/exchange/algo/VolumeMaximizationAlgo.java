@@ -6,6 +6,10 @@ import com.exchange.data.Side;
 import com.exchange.orderbook.OrderBook;
 import com.exchange.util.ExchangeUtils;
 
+/**
+ * Matching Algorithm to traverse through a given book and find highest price at which maximum volume can be matched 
+ *
+ */
 public class VolumeMaximizationAlgo implements MatchingAlgo {
 
 	public final String name = "Volume Maximization";
@@ -20,6 +24,7 @@ public class VolumeMaximizationAlgo implements MatchingAlgo {
 		long highestVolume = 0;
 		double matchingPrice = 0.0;
 		
+		//Get all prices from book in descending order 
 		TreeSet<Long> allPrices = new TreeSet<>(Side.Buy.getComparator());
 		TreeSet<Long> bids = orderBook.getBids();
 		TreeSet<Long> asks = orderBook.getAsks();
@@ -27,19 +32,19 @@ public class VolumeMaximizationAlgo implements MatchingAlgo {
 		allPrices.addAll(asks);
 
 		for (Long price : allPrices) {
-			System.out.println("Price," + price);
+			// At each price level get buy and sell qty available
 			long buyQty = 0;
-			for (Long bidPrice : bids.headSet(price, true)) {
-				System.out.println("Bid Price," + bidPrice);
+			for (Long bidPrice : bids.headSet(price, true)) 
 				buyQty = buyQty + orderBook.getAvailableBuyQtyAtPrice(bidPrice);
-			}
+			
 			long sellQty = 0;
-			for (Long askPrice : asks.headSet(price, true)) {
-				System.out.println("Ask Price," + askPrice);
+			for (Long askPrice : asks.headSet(price, true)) 
 				sellQty = sellQty + orderBook.getAvailableSellQtyAtPrice(askPrice);
-			}
+			
+			//Quantity that can be matched is minimum of available buy and sell qty
 			long totalMatchingQty = Math.min(buyQty, sellQty);
-			System.out.println();
+
+			//If new volume is higher than previously seen volume and use it as maximum along with price
 			if (totalMatchingQty > highestVolume) {
 				highestVolume = totalMatchingQty;
 				matchingPrice = ExchangeUtils.convertPriceToDouble(price);
