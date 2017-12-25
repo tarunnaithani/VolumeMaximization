@@ -14,6 +14,6 @@ public interface MatchingAlgo {
 	 * @param orderBook on which algorithm needs to be run
 	 * @return result of execution
 	 */
-	public MatchingResult execute(OrderBook orderBook);
+	public MatchingResult execute(OrderBook orderBook, int decimalPrecision);
 
 }

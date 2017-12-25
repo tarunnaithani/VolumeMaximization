@@ -1,39 +1,73 @@
 BRIEF SUMMARY
-This is basic implementation of Market simulator catering to single stock and new limit orders only.
-It accepts orders and prints executions as well as order book whenever execution occurs. 
-It prints only one execution per match based on requirements. It can easily be altered to print execution per order
-The simulator runs as single threaded application and matching is triggered when order is received by the system.
 
-ConsoleMarketSimulator is the main class which brings together Console reader, Order cache and Order Book.
-It contains the Simulator logic,
- Step 1. Reads order using receiver
- Step 2. Tries to execute order based on available orders in the book
- Step 3. Prints executions and order book, if any executions occur
+Volume Maximization Algorithm
+	This is basic implementation of Volume Maximization Algorithm.
+	It starts by creating a single sorted TreeSet with all bid and ask prices sorted in descending order
+	to give priority to matching at higher price. It traverses the new price set for each price and 
+	calculates buy volume and sell volume available at that price. 
+	Matching volume at a price is minimum of buy and sell volume at that price. If the matching volume is 
+	greater 	than previously found matching volume then it is picked as highest volume seen so far and price
+	is stored as matching price.
+	At the end of traversal highest matching volume, if found, is returned along with price for the match 
+	as successful result.
+	
+	Buy volume at a price, is sum of available quantity from all orders at price equal or greater
+	than the given price. Similarly sell volume, is sum of available quantity from all orders at price 
+	equal or lower than given price.   
+	
+OrderBook data-structure
+	OrderBook maintains bid and ask prices in separate TreeSet, Bid prices are sorted in descending order 
+	while ask prices are sorted in ascending order (potentially to display top bid and ask price if needed).
+	For each Order added to OrderBook an OrderEntry object is created and a map of Order Id with OrderEntry 
+	is maintained for both Buy and Sell orders.  
+	In addition to above for each price in Bid/ask, a separate HashMap of Price and first OrderEntry is maintained. 
+	The first OrderEntry acts like HEAD of linked-list and contains link to next OrderEntry at that price level. 
+	Any new order when added to book is added to end of the linked list to maintain time priority.
+	
+	For example if buy orders were received as b1, b2 and b3 at same price P.
+	Then price P will have mapping to OrderEntry for b1 and internally b1 will contain link to b2 and 
+	similarly b2 will contain link to b3. 
+
+Exchange Operations supported
+	-> accepts limit only orders for multiple stocks and runs price and quantity validations
+	-> normalizes order price to decimal precision configured at exchange level
+	-> maintains one Order Book for each symbol
+	-> Provides central place to run matching algorithm on the order book
+
+Problem Simulation	
+	VolumeMaximizerSimulation class runs as Java application and is responsible for running simulation requested 
+	in problem set.
+	It starts by creating an exchange then sends buy and sell orders with configured time delay in between. 
+	Quantity and prices for orders are drawn from Normal distribution with configured mean and standard deviation.
+	Once order sending operations to exchange are complete, VolumeMaximization Algorithm is run and if match is 
+	found, result is printed on console.
+	 
+	The simulation runs as single threaded application and matching is triggered when order sending operations are complete.
+
+
+IMPORTANT CLASSES
+	VolumeMaximizerSimulation - The main class which simulates the given problem set. 
+	Parameters are defined as static variables and can be modified to change simulation
   
- OrderBook class contains functionality to accept order and maintain order book.
- It also matches order and creates executions. 
- The order Book is maintained using a doubly linked list for each price level at Bid and Ask sides.
- 
-
-OrderReceiver interface has been defined to standardize Input operations for order entry.
-ConsoleOrderReceiver is the sole implementation of the above interface to read order as console input.
-More implementation using network IO can be written when Simulator is used by OMS for testing.
-
-Output interface has not been defined as right now execution and printed along with order book when executions occurs.
-If needed printing of execution can be carried out by interface similar to input interface to cater to multiple input channels.
-
+	OrderBook - Maintains prices and order entries for buy and sell orders for a symbol at those price based on time priority
+	within each price level.
+		
+	Exchange - Provides basic order operations for the simulation like ensuring order book for different symbols, decimal precision
+	and validating incoming order. It also provides central place to run matching algorithms on order books.  
 
 SYSTEM LIMITATIONS
--> Current system does lot of Object creation during operation which will cause GC issues if used in load testing.
-If capacity requirements are deterministic then further tuning can be done to avoid Object creation during Simulator operation entirely.
+	-> The code logs everything to Console 
 
--> Heap implementation uses Java priority queues which are not meant for low latency jobs. 
-A custom implementation of Heap will increase the performance.   
-
+	-> Current system does lot of Object creation during operation which will cause GC issues if used in load testing.If capacity 
+	requirements are deterministic then further tuning can be done to avoid Object creation during simulation operation entirely.
 
 TESTING
-->TestOrderBook can be used to run and test scenarios for OrderBook implementation
+-> VolumeMaximizationAlgTest contains test scenarios which simulates different order books and Matching Algorithm running on them
 
--> TestConsoleMarketSimulator can be used for testing console based input
+-> ExchangeTest runs scenarios to test Exchange operations
 
--> ConsoleMarketSimulator contains main method to run simulator as Java application as well.
+-> OrderBookTest contains all scenarios test for Order book implementation
+
+-> ExchangeutilsTest verifies the decimal to long and vice versa conversion in the code
+
+-> TestBase has common code like asserting order book after orders have been added to it, common create order methods for Buy and Sell orders

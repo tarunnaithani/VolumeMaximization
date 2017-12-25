@@ -6,7 +6,8 @@ import com.exchange.data.Order;
 import com.exchange.data.Side;
 import com.exchange.orderbook.OrderBook;
 
-public class TestHelper {
+public abstract class TestBase {
+	public static int DECIMAL_PRECISION = 4;
 	public static int ORDER_ID = 0;
 	public static String DEFAULT_SYMBOL = "0005.HK";
 	
@@ -23,8 +24,8 @@ public class TestHelper {
 	}
 
 	public final void assertOrderBookAsExpected(String expected, OrderBook book) {
-		System.out.println(book);
-		assertEquals(trimmedString(expected), trimmedString(book.toString()));
+		System.out.println(book.printBook(DECIMAL_PRECISION));
+		assertEquals(trimmedString(expected), trimmedString(book.printBook(DECIMAL_PRECISION)));
 	}
 	
 	public final String trimmedString(String str) {

@@ -1,15 +1,15 @@
 package com.exchange.util;
 
-import com.exchange.ExchangeConstants;
-
 public class ExchangeUtils {
 
-	public static long convertPriceToLong(double price) {
-		return (long)(price * ExchangeConstants.MAX_DECIMAL_PRECISION);
+	public static long convertPriceToLong(double price, int precision) {
+		long multiplier = (long)Math.pow(10, precision);
+		return (long)(price * multiplier);
 	}
 
-	public static double convertPriceToDouble(Long price) {
-		return ((double)price)/ExchangeConstants.MAX_DECIMAL_PRECISION;
+	public static double convertPriceToDouble(Long price, int precision) {
+		long multiplier = (long)Math.pow(10, precision);
+		return ((double)price)/multiplier;
 	}
 
 }

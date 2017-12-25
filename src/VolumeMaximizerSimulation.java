@@ -1,5 +1,6 @@
 
 
+import java.util.Date;
 import java.util.Random;
 
 import com.exchange.Exchange;
@@ -10,26 +11,38 @@ import com.exchange.data.Side;
 import com.exchange.util.ExchangeUtils;
 
 public class VolumeMaximizerSimulation {
+	/** Modify to change starting order id in program */
 	public static int DEFAULT_ORDER_ID = 0;
+	/** Modify to change symbol used in program */
 	public static final String DEFAULT_SYMBOL = "0005.HK";
-
-	public static final double MEAN_PRICE_DISTRIBUTION = 50.0;
-	public static final double STD_DEV_PRICE_DISTRIBUTION = 6.0;
-
-	public static final double MEAN_QTY_DISTRIBUTION = 100000.0;
-	public static final double STD_DEV_QTY_DISTRIBUTION = 20000.0;
+	/** Modify to change decimal precision of price at exchange level */
+	public static final int DECIMAL_PRECISION = 5;
 	
-	private static final Random random = new Random(System.currentTimeMillis());
+	/** Modify to change how price is drawn from normal distribution */
+	public static final double MEAN_FOR_PRICE = 50.0;
+	public static final double STD_DEVIATION_FOR_PRICE = 6.0;
+
+	/** Modify to change how quantity is drawn from normal distribution */
+	public static final double MEAN_FOR_QUANTITY = 100000.0;
+	public static final double STD_DEVIATION_FOR_QUANTITY = 20000.0;
 	
 	private static final long MILLIS_PER_SECOND = 1000;
 	private static final long MILLIS_PER_MIN = 60 * MILLIS_PER_SECOND;
 	
+	/** Modify to change minimum time interval in seconds between order send operation, each operation sends 1 buy and 1 sell order */
 	private static final long TIME_INTERVAL_BETWEEN_ORDERS_IN_SECONDS = 30 * MILLIS_PER_SECOND;
+	/** Modify to change total program run duration in minutes */
 	private static final long PROGRAM_RUN_TIME_IN_MINS = 15 * MILLIS_PER_MIN;
 
+	
+	private static final Random random = new Random(System.currentTimeMillis());
+	
 	public static void main(String[] args) {
-		Exchange exchange = new Exchange();
+		Exchange exchange = new Exchange(DECIMAL_PRECISION);
+
 		long startTime = System.currentTimeMillis();
+		System.out.println("Order send operations started at," + new Date(startTime));
+		
 		while ((System.currentTimeMillis() - startTime) <= PROGRAM_RUN_TIME_IN_MINS) {
 			for (Side side :Side.values()) {
 				Order order = createOrderFromDistribution(side);
@@ -42,19 +55,21 @@ public class VolumeMaximizerSimulation {
 				e.printStackTrace();
 			}
 		}
-		System.out.println(exchange.getBookForSymbol(DEFAULT_SYMBOL));
+		
+		long endTime = System.currentTimeMillis();
+		System.out.println("Order send operations started at," + new Date(endTime));
+		
+		System.out.println("Order Book so far,\n" + exchange.getBookForSymbol(DEFAULT_SYMBOL).printBook(DECIMAL_PRECISION));
 		MatchingResult result = exchange.executeMatchingAlgo(new VolumeMaximizationAlgo(), DEFAULT_SYMBOL);
-		if(result.matched()) {
-			System.out.println("Match found in book,\n" + exchange.getBookForSymbol(DEFAULT_SYMBOL));
+		if(result.matched())
 			System.out.println("Match maximum volume," + result.getMatchingVolume() + " at price," + result.getMatchingPrice());
-		}
 		else
 			System.out.println("Match not found in book," + exchange.getBookForSymbol(DEFAULT_SYMBOL));
 	}
 
 	public static Order createOrderFromDistribution(Side side) {
-		long qty = getLong(MEAN_QTY_DISTRIBUTION, STD_DEV_QTY_DISTRIBUTION);
-		double price = getDoubleWithPrecision(MEAN_PRICE_DISTRIBUTION, STD_DEV_PRICE_DISTRIBUTION);
+		long qty = getLong(MEAN_FOR_QUANTITY, STD_DEVIATION_FOR_QUANTITY);
+		double price = getDoubleWithPrecision(MEAN_FOR_PRICE, STD_DEVIATION_FOR_PRICE);
 		
 		return new Order(++DEFAULT_ORDER_ID, DEFAULT_SYMBOL, side, qty, price);
 	}
@@ -65,7 +80,7 @@ public class VolumeMaximizerSimulation {
 	
 	public static double getDoubleWithPrecision(double mean, double stdDeviation) {
 		double value = (random.nextGaussian() * stdDeviation ) + mean;
-		long price = ExchangeUtils.convertPriceToLong(value);
-		return ExchangeUtils.convertPriceToDouble(price);
+		long price = ExchangeUtils.convertPriceToLong(value, DECIMAL_PRECISION);
+		return ExchangeUtils.convertPriceToDouble(price, DECIMAL_PRECISION);
 	}
 }

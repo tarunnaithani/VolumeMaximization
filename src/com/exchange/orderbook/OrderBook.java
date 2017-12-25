@@ -28,6 +28,7 @@ public class OrderBook {
 	private final HashMap<Long, OrderEntry> askMap;
 
 	public OrderBook(int capacity) {
+		
 		this.bids = new TreeSet<>(Side.Buy.getComparator());
 		this.bidMap = new HashMap<>(capacity);
 
@@ -37,26 +38,25 @@ public class OrderBook {
 		this.orderEntries = new HashMap<>(capacity);
 	}
 
-	public boolean addOrder(Order order) {
+	public boolean addOrder(Order order, long price) {
 		if (order.getSide() == Side.Buy)
-			return addOrder(order, bids, bidMap);
+			return addOrder(order, bids, bidMap, price);
 		else 
-			return addOrder(order, asks, askMap);
+			return addOrder(order, asks, askMap, price);
 	}
 
-	public boolean cancelOrder(Order order) {
+	public boolean cancelOrder(Order order, long price) {
 		if (order.getSide() == Side.Buy)
-			return removeOrder(order, bids, bidMap);
+			return removeOrder(order, bids, bidMap, price);
 		else 
-			return removeOrder(order, asks, askMap);
+			return removeOrder(order, asks, askMap, price);
 	}
 
 
-	private boolean addOrder(Order order, TreeSet<Long> prices,	HashMap<Long, OrderEntry> priceMap) {
+	private boolean addOrder(Order order, TreeSet<Long> prices,	HashMap<Long, OrderEntry> priceMap, long price) {
 		if(orderEntries.containsKey(order.getOrderId()))
 			return false;
 
-		long price = ExchangeUtils.convertPriceToLong(order.getPrice());
 		if (priceMap.containsKey(price)) {
 			// If price level already exists, add order to end of the linked list
 			OrderEntry newOrderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), price);
@@ -79,8 +79,7 @@ public class OrderBook {
 	}
 
 	private boolean removeOrder(Order order, TreeSet<Long> prices,
-			HashMap<Long, OrderEntry> priceMap) {
-		long price = ExchangeUtils.convertPriceToLong(order.getPrice());
+			HashMap<Long, OrderEntry> priceMap, long price) {
 		if(!orderEntries.containsKey(order.getOrderId()))
 			return false;
 		
@@ -143,8 +142,7 @@ public class OrderBook {
 		return totalQuantity;
 	}
 	
-	@Override
-	public String toString() {
+	public String printBook(int decimalPrecision) {
 		if (bids.size() == 0 && asks.size() == 0)
 			return "";
 		TreeSet<Long> allPrices = new TreeSet<>(Side.Buy.getComparator());
@@ -157,14 +155,14 @@ public class OrderBook {
 			buffer.append("\n");
 			// If bid level exists, print it
 			if (bidMap.containsKey(price))
-				buffer.append(getAvailableBuyQtyAtPrice(price) + "@" + ExchangeUtils.convertPriceToDouble(price)).append("\t");
+				buffer.append(getAvailableBuyQtyAtPrice(price) + "@" + ExchangeUtils.convertPriceToDouble(price, decimalPrecision)).append("\t");
 			else
 				buffer.append("\t\t");
 			
 			buffer.append(" | ");
 			// If ask level exists, print it
 			if (askMap.containsKey(price))
-				buffer.append(getAvailableSellQtyAtPrice(price) + "@" + ExchangeUtils.convertPriceToDouble(price)).append("\t");
+				buffer.append(getAvailableSellQtyAtPrice(price) + "@" + ExchangeUtils.convertPriceToDouble(price, decimalPrecision)).append("\t");
 			else
 				buffer.append("\t\t ");
 		}

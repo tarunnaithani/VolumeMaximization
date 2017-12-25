@@ -1,19 +1,19 @@
-package com.exchange.algo;
+	package com.exchange.algo;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
 import com.exchange.Exchange;
-import com.exchange.common.TestHelper;
+import com.exchange.common.TestBase;
 import com.exchange.orderbook.OrderBook;
 
-class VolumeMaximizationAlgoTest extends TestHelper{
+class VolumeMaximizationAlgoTest extends TestBase{
 
 	@Test
-	void testVolumeMaximizationWithEmptyBook() {
+	void testVolumeMaximizationOnEmptyOrderBook() {
 		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
-		MatchingResult result = volumeMax.execute(new OrderBook(10));
+		MatchingResult result = volumeMax.execute(new OrderBook(10), DECIMAL_PRECISION);
 		
 		assertNotNull(volumeMax.name());
 		assertFalse(result.matched());
@@ -22,32 +22,36 @@ class VolumeMaximizationAlgoTest extends TestHelper{
 	}
 
 	@Test
-	void testVolumeMaximizationWithOneSidedBook() {
+	void testVolumeMaximizationOnOneSidedOrderBook() {
 		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
 		Exchange exchange = new Exchange();
 		exchange.sendOrder(createBuyOrder(1000, 99.0));
 		
-		assertOrderBookAsExpected("Buy		 |	Sell			\n" + 
-								"1000@99.0	 | 				", exchange.getBookForSymbol(DEFAULT_SYMBOL));
+		assertOrderBookAsExpected(
+				"Buy		 	|	Sell			\n" + 
+				"1000@99.0	| 				", exchange.getBookForSymbol(DEFAULT_SYMBOL));
 		
 		MatchingResult result = exchange.executeMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
+		
 		assertFalse(result.matched());
 		assertEquals(0, result.getMatchingVolume());
 		assertEquals(0.0, result.getMatchingPrice());	
 	}
 	
 	@Test
-	void testVolumeMaximizationWithBookWithNoMatch() {
+	void testVolumeMaximizationOnOrderBookWithNoMatch() {
 		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
 		Exchange exchange = new Exchange();
 		exchange.sendOrder(createBuyOrder(1000, 99.0));
 		exchange.sendOrder(createSellOrder(1000, 100.0));
 		
-		assertOrderBookAsExpected("Buy		 |	Sell			\n" + 
-								"			 | 1000@100.0	\n" + 
-								"1000@99.0	 | 				", exchange.getBookForSymbol(DEFAULT_SYMBOL));
+		assertOrderBookAsExpected(
+				"Buy		 	|	Sell			\n" + 
+				"		 	| 1000@100.0		\n" + 
+				"1000@99.0	| 				", exchange.getBookForSymbol(DEFAULT_SYMBOL));
 		
 		MatchingResult result = exchange.executeMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
+		
 		assertFalse(result.matched());
 		assertEquals(0, result.getMatchingVolume());
 		assertEquals(0.0, result.getMatchingPrice());		
@@ -55,7 +59,7 @@ class VolumeMaximizationAlgoTest extends TestHelper{
 	
 
 	@Test
-	void testVolumeMaximizationWithBookWithOneLevelAndMatch() {
+	void testVolumeMaximizationOnOrderBookWithMatchingOrdersAtOnePriceLevel() {
 		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
 		Exchange exchange = new Exchange();
 		exchange.sendOrder(createBuyOrder(1000, 100.0));
@@ -70,9 +74,26 @@ class VolumeMaximizationAlgoTest extends TestHelper{
 		assertEquals(100.0, result.getMatchingPrice());		
 	}
 
+	@Test
+	void testVolumeMaximizationWithMatchingOrdersAtTwoPriceLevel() {
+		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
+		Exchange exchange = new Exchange();
+		exchange.sendOrder(createBuyOrder(4000, 102.0));
+		
+		exchange.sendOrder(createSellOrder(5000, 99.0));
+		
+		assertOrderBookAsExpected("Buy		 |	Sell			\n" + 
+								"4000@102.0	 | 		 		\n" + 
+								"		 	 | 5000@99.0	"	, exchange.getBookForSymbol(DEFAULT_SYMBOL));
+		
+		MatchingResult result = exchange.executeMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
+		assertTrue(result.matched());
+		assertEquals(4000, result.getMatchingVolume());
+		assertEquals(102.0, result.getMatchingPrice());		
+	}
 	
 	@Test
-	void testVolumeMaximizationWithMultiLevelMatch() {
+	void testVolumeMaximizationOnOrderBookWithMatchingOrdersAtMultiplePriceLevel() {
 		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
 		Exchange exchange = new Exchange();
 		exchange.sendOrder(createBuyOrder(1000, 99.0));
@@ -95,7 +116,7 @@ class VolumeMaximizationAlgoTest extends TestHelper{
 	}
 	
 	@Test
-	void testVolumeMaximizationWithMultiLevelAndMultipleMatch() {
+	void testVolumeMaximizationWithMatchingOrdersAtFourPriceLevel() {
 		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
 		Exchange exchange = new Exchange();
 		exchange.sendOrder(createBuyOrder(1000, 99.0));
@@ -118,24 +139,6 @@ class VolumeMaximizationAlgoTest extends TestHelper{
 		assertTrue(result.matched());
 		assertEquals(3000, result.getMatchingVolume());
 		assertEquals(100.0, result.getMatchingPrice());		
-	}
-	
-	@Test
-	void testVolumeMaximizationWithMultiLevelAndMultipleMatch2() {
-		VolumeMaximizationAlgo volumeMax = new VolumeMaximizationAlgo();
-		Exchange exchange = new Exchange();
-		exchange.sendOrder(createBuyOrder(4000, 102.0));
-		
-		exchange.sendOrder(createSellOrder(5000, 99.0));
-		
-		assertOrderBookAsExpected("Buy		 |	Sell			\n" + 
-								"4000@102.0	 | 		 		\n" + 
-								"		 	 | 5000@99.0	"	, exchange.getBookForSymbol(DEFAULT_SYMBOL));
-		
-		MatchingResult result = exchange.executeMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
-		assertTrue(result.matched());
-		assertEquals(4000, result.getMatchingVolume());
-		assertEquals(102.0, result.getMatchingPrice());		
-	}
+	}	
 	
 }

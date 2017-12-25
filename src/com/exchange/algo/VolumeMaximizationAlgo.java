@@ -20,7 +20,7 @@ public class VolumeMaximizationAlgo implements MatchingAlgo {
 	}
 
 	@Override
-	public MatchingResult execute(OrderBook orderBook) {
+	public MatchingResult execute(OrderBook orderBook, int decimalPrecision) {
 		long highestVolume = 0;
 		double matchingPrice = 0.0;
 		
@@ -47,7 +47,7 @@ public class VolumeMaximizationAlgo implements MatchingAlgo {
 			//If new volume is higher than previously seen volume and use it as maximum along with price
 			if (totalMatchingQty > highestVolume) {
 				highestVolume = totalMatchingQty;
-				matchingPrice = ExchangeUtils.convertPriceToDouble(price);
+				matchingPrice = ExchangeUtils.convertPriceToDouble(price, decimalPrecision);
 			}
 		}
 

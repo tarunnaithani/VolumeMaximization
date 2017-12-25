@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 
 import com.exchange.algo.MatchingAlgo;
 import com.exchange.algo.MatchingResult;
-import com.exchange.common.TestHelper;
+import com.exchange.common.TestBase;
 import com.exchange.data.Order;
 import com.exchange.data.Side;
 import com.exchange.orderbook.OrderBook;
 
-class ExchangeTest extends TestHelper{
+class ExchangeTest extends TestBase{
 
 	@Test
 	void testOrderForMultipleSymbols() {
@@ -48,6 +48,26 @@ class ExchangeTest extends TestHelper{
 	}
 
 	@Test
+	void testMaxMinDecimalPrecisionInPrice() {
+		Exchange exchange = new Exchange();
+		
+		double minPrecision = (double)1/Math.pow(10, DECIMAL_PRECISION);
+		double maxPrecision = (double)1/(Math.pow(10, DECIMAL_PRECISION) * 10) - minPrecision;
+		double minPrice = 1 + minPrecision;
+		double maxPrice = 1 + maxPrecision;
+		
+		exchange.sendOrder(createBuyOrder(2000, minPrice));
+		exchange.sendOrder(createBuyOrder(2000, maxPrice));
+		
+		exchange.sendOrder(createSellOrder(2000, minPrice));
+		exchange.sendOrder(createSellOrder(2000, maxPrice));
+		assertOrderBookAsExpected(
+				"Buy		 		|	Sell\n" + 
+				"2000@1.0001	 	| 2000@1.0001	\n" + 
+				"2000@0.9999	 	| 2000@0.9999", exchange.getBookForSymbol(DEFAULT_SYMBOL));
+	}
+	
+	@Test
 	void testDuplicateOrder() {
 		Exchange exchange = new Exchange();
 		Order order = new Order(getOrderId(), DEFAULT_SYMBOL, Side.Buy, 1000, 10.0);
@@ -77,7 +97,7 @@ class ExchangeTest extends TestHelper{
 			}
 			
 			@Override
-			public MatchingResult execute(OrderBook orderBook) {
+			public MatchingResult execute(OrderBook orderBook, int decimalPrecision) {
 				return new MatchingResult(true, 1000, 1000);
 			}
 		};
