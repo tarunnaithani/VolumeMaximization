@@ -2,7 +2,8 @@ package com.exchange;
 
 import java.util.HashMap;
 
-import com.exchange.algo.ExchangeAlgo;
+import com.exchange.algo.MatchingAlgo;
+import com.exchange.algo.MatchingResult;
 import com.exchange.data.Order;
 import com.exchange.orderbook.OrderBook;
 
@@ -32,6 +33,8 @@ public class Exchange {
 	 * @return true if success, else false
 	 */
 	public boolean sendOrder(Order order) {
+		if(!validateOrder(order))
+			return false;
 		//Check if order id already exists
 		if(orderStore.containsKey(order.getOrderId()))
 			return false;
@@ -51,6 +54,14 @@ public class Exchange {
 			orderStore.put(order.getOrderId(), order);
 		
 		return retVal;
+	}
+
+	private boolean validateOrder(Order order) {
+		if(order.getPrice() <=0)
+			return false;
+		if(order.getQuantity() <= 0)
+			return false;
+		return true;
 	}
 
 	/**
@@ -93,10 +104,10 @@ public class Exchange {
 	 * @param symbol symbol for which order book needs to be retrieved
 	 * @return true if success, else false
 	 */
-	public boolean executeMatchingAlgo(ExchangeAlgo exchangeAlgo, String symbol) {
+	public MatchingResult executeMatchingAlgo(MatchingAlgo exchangeAlgo, String symbol) {
 		if(symbolBooks.containsKey(symbol))
 			return exchangeAlgo.execute(symbolBooks.get(symbol));
-		return false;
+		return new MatchingResult(false, 0.0, 0);
 	}
 
 }

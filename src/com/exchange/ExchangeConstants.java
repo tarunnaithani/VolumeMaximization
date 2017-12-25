@@ -1,6 +1,6 @@
 package com.exchange;
 
-public interface ExchangeConstants {
+public class ExchangeConstants {
 
 	/** Maximum decimal precision supported by exchange, currently configured for 4 decimal places */
 	public static long MAX_DECIMAL_PRECISION = 10000l;
@@ -13,4 +13,5 @@ public interface ExchangeConstants {
 
 	/** Initial capacity for Orders at Exchange */
 	public static int INTIAL_CAPACITY_FOR_ORDERS = 1000;
+
 }

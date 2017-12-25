@@ -1,11 +1,12 @@
 package com.exchange.orderbook;
 
+
 import java.util.HashMap;
 import java.util.TreeSet;
 
-import com.exchange.ExchangeConstants;
 import com.exchange.data.Order;
 import com.exchange.data.Side;
+import com.exchange.util.ExchangeUtils;
 
 /**
  * Class to maintain OrderBook for a given set of orders. 
@@ -55,7 +56,7 @@ public class OrderBook {
 		if(orderEntries.containsKey(order.getOrderId()))
 			return false;
 
-		long price = (long)(order.getPrice() * ExchangeConstants.MAX_DECIMAL_PRECISION);
+		long price = ExchangeUtils.convertPriceToLong(order.getPrice());
 		if (priceMap.containsKey(price)) {
 			// If price level already exists, add order to end of the linked list
 			OrderEntry newOrderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), price);
@@ -77,10 +78,9 @@ public class OrderBook {
 		return true;
 	}
 
-
 	private boolean removeOrder(Order order, TreeSet<Long> prices,
 			HashMap<Long, OrderEntry> priceMap) {
-		long price = (long)(order.getPrice() * ExchangeConstants.MAX_DECIMAL_PRECISION);
+		long price = ExchangeUtils.convertPriceToLong(order.getPrice());
 		if(!orderEntries.containsKey(order.getOrderId()))
 			return false;
 		
@@ -117,10 +117,6 @@ public class OrderBook {
 		return true;
 	}
 
-	public HashMap<Integer, OrderEntry> getOrderEntries() {
-		return orderEntries;
-	}
-
 	public TreeSet<Long> getBids() {
 		return bids;
 	}
@@ -129,50 +125,46 @@ public class OrderBook {
 		return asks;
 	}
 
+	public long getAvailableSellQtyAtPrice(Long price) {
+		return getAvailableQtyAtPrice(price, askMap);
+	}
+	
+	public long getAvailableBuyQtyAtPrice(Long price) {
+		return getAvailableQtyAtPrice(price, bidMap);
+	}
+
+	private long getAvailableQtyAtPrice(Long price, HashMap<Long, OrderEntry> priceMap) {
+		OrderEntry entry = priceMap.get(price);
+		long totalQuantity = entry.getAvailableQty();
+		while (entry.next != -1) {
+			entry = orderEntries.get(entry.next);
+			totalQuantity = totalQuantity + entry.getAvailableQty();
+		}
+		return totalQuantity;
+	}
+	
 	@Override
 	public String toString() {
 		if (bids.size() == 0 && asks.size() == 0)
 			return "";
 		TreeSet<Long> allPrices = new TreeSet<>(Side.Buy.getComparator());
-		for(Long price: bids)
-			if(!allPrices.contains(price))
-				allPrices.add(price);
-		for(Long price: asks)
-			if(!allPrices.contains(price))
-				allPrices.add(price);
-		
+		allPrices.addAll(bids);
+		allPrices.addAll(asks);
+
 		StringBuffer buffer = new StringBuffer(1024);
 		buffer.append("Buy").append("\t\t|\t").append("Sell");
 		for (Long price: allPrices) {
 			buffer.append("\n");
 			// If bid level exists, print it
 			if (bidMap.containsKey(price))
-			{
-				OrderEntry entry = bidMap.get(price);
-				long totalQuantity = entry.getAvailableQty();
-				while (entry.next != -1) {
-					entry = orderEntries.get(entry.next);
-					totalQuantity = totalQuantity + entry.getAvailableQty();
-				}
-				buffer.append(totalQuantity + "@" + new Double(price)/ExchangeConstants.MAX_DECIMAL_PRECISION);
-				buffer.append("\t");
-			}
+				buffer.append(getAvailableBuyQtyAtPrice(price) + "@" + ExchangeUtils.convertPriceToDouble(price)).append("\t");
 			else
 				buffer.append("\t\t");
 			
 			buffer.append(" | ");
 			// If ask level exists, print it
 			if (askMap.containsKey(price))
-			{
-				OrderEntry entry = askMap.get(price);
-				long totalQuantity = entry.getAvailableQty();
-				while (entry.next != -1) {
-					entry = orderEntries.get(entry.next);
-					totalQuantity = totalQuantity + entry.getAvailableQty();
-				}
-				buffer.append(totalQuantity + "@" + new Double(price)/ExchangeConstants.MAX_DECIMAL_PRECISION);
-				buffer.append("\t");
-			}
+				buffer.append(getAvailableSellQtyAtPrice(price) + "@" + ExchangeUtils.convertPriceToDouble(price)).append("\t");
 			else
 				buffer.append("\t\t ");
 		}
