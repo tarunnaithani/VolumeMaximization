@@ -27,8 +27,8 @@ public class VolumeMaximizerSimulation {
 				exchange.sendOrder(order);
 			}
 		}
-		
-		exchange.executeMatchingAlgo(new VolumeMaximizationAlgo());
+		System.out.println(exchange.getBookForSymbol(DEFAULT_SYMBOL));
+		exchange.executeMatchingAlgo(new VolumeMaximizationAlgo(), DEFAULT_SYMBOL);
 	}
 
 	public static Order createOrderFromDistribution(Side side) {

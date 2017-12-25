@@ -8,17 +8,18 @@ import com.exchange.orderbook.OrderBook;
 
 public class TestHelper {
 	public static int ORDER_ID = 0;
+	public static String DEFAULT_SYMBOL = "0005.HK";
 	
 	public static int getOrderId() {
 		return ORDER_ID++;
 	}
 
 	public Order createBuyOrder(long qty, double price) {
-		return new Order(getOrderId(), "0001.HK", Side.Buy, qty, price);
+		return new Order(getOrderId(), DEFAULT_SYMBOL, Side.Buy, qty, price);
 	}
 	
 	public Order createSellOrder(long qty, double price) {
-		return new Order(getOrderId(), "0001.HK", Side.Sell, qty, price);
+		return new Order(getOrderId(), DEFAULT_SYMBOL, Side.Sell, qty, price);
 	}
 
 	public final void assertOrderBookAsExpected(String expected, OrderBook book) {

@@ -2,7 +2,7 @@ package com.exchange;
 
 public interface ExchangeConstants {
 
-	/** Maximum decimal precision supported by exchange */
+	/** Maximum decimal precision supported by exchange, currently configured for 4 decimal places */
 	public static long MAX_DECIMAL_PRECISION = 10000l;
 
 	/** Initial capacity for price levels in an order book */

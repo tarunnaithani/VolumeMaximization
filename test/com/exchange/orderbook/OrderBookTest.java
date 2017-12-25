@@ -1,6 +1,7 @@
 package com.exchange.orderbook;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -9,11 +10,11 @@ import com.exchange.data.Order;
 
 class OrderBookTest extends TestHelper{
 	private void addOrderToBookWithSuccess(Order order, OrderBook book) {
-		assertEquals(true, book.addOrder(order));
+		assertTrue(book.addOrder(order));
 	}
 
 	private void addOrderToBookWithFailure(Order order, OrderBook book) {
-		assertEquals(false, book.addOrder(order));
+		assertFalse(book.addOrder(order));
 	}
 
 	@Test
@@ -89,7 +90,7 @@ class OrderBookTest extends TestHelper{
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
-		assertEquals(true, book.cancelOrder(order));
+		assertTrue(book.cancelOrder(order));
 		assertOrderBookAsExpected("", book);
 	}
 	
@@ -102,7 +103,7 @@ class OrderBookTest extends TestHelper{
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
-		assertEquals(false, book.cancelOrder(createBuyOrder(2000, 100.0004)));
+		assertFalse(book.cancelOrder(createBuyOrder(2000, 100.0004)));
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 	}
@@ -116,7 +117,7 @@ class OrderBookTest extends TestHelper{
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
-		assertEquals(false, book.cancelOrder(new Order(order.getOrderId(), order.getSymbol(), order.getSide(), order.getQuantity(), 100.00)));
+		assertFalse(book.cancelOrder(new Order(order.getOrderId(), order.getSymbol(), order.getSide(), order.getQuantity(), 100.00)));
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 	}
@@ -135,7 +136,7 @@ class OrderBookTest extends TestHelper{
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		assertEquals(true, book.cancelOrder(o1));
+		assertTrue(book.cancelOrder(o1));
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
 	}
@@ -153,7 +154,7 @@ class OrderBookTest extends TestHelper{
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		assertEquals(true, book.cancelOrder(o2));
+		assertTrue(book.cancelOrder(o2));
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
 	}
@@ -172,7 +173,7 @@ class OrderBookTest extends TestHelper{
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		assertEquals(true, book.cancelOrder(o3));
+		assertTrue(book.cancelOrder(o3));
 		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
 	}
@@ -207,16 +208,16 @@ class OrderBookTest extends TestHelper{
 				"4000@100.0005	| 2000@100.0005	\n" + 
 				"6000@100.0004	| 2000@100.0004	", book);
 		
-		assertEquals(true, book.cancelOrder(b1));
-		assertEquals(true, book.cancelOrder(s1));
-		assertEquals(true, book.cancelOrder(b2));
-		assertEquals(true, book.cancelOrder(s2));
-		assertEquals(true, book.cancelOrder(b3));
-		assertEquals(true, book.cancelOrder(s3));
-		assertEquals(true, book.cancelOrder(b4));
-		assertEquals(true, book.cancelOrder(s4));
-		assertEquals(true, book.cancelOrder(b5));
-		assertEquals(true, book.cancelOrder(s5));
+		assertTrue(book.cancelOrder(b1));
+		assertTrue(book.cancelOrder(s1));
+		assertTrue(book.cancelOrder(b2));
+		assertTrue(book.cancelOrder(s2));
+		assertTrue(book.cancelOrder(b3));
+		assertTrue(book.cancelOrder(s3));
+		assertTrue(book.cancelOrder(b4));
+		assertTrue(book.cancelOrder(s4));
+		assertTrue(book.cancelOrder(b5));
+		assertTrue(book.cancelOrder(s5));
 		
 		assertOrderBookAsExpected("", book);
 	}
