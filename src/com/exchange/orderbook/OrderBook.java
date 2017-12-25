@@ -2,38 +2,40 @@ package com.exchange.orderbook;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.PriorityQueue;
 import java.util.TreeSet;
 
-import com.exchange.data.Constants;
+import com.exchange.ExchangeConstants;
 import com.exchange.data.Order;
 import com.exchange.data.Side;
 
 /**
  * Class to maintain OrderBook for a given set of orders. 
  * -> Contains method to add/remove order to/from appropriate price level on Bid or Ask side. 
- * -> Contains method to execute order from the given order book state.
  */
 public class OrderBook {
 
-	private final HashMap<Integer, Order> orderStore;
+	/** map containing all order entries on the order book */
 	private final HashMap<Integer, OrderEntry> orderEntries;
 	
-	private final PriorityQueue<PriceLevel> bids;
+	/** Sorted tree to store all bid prices with maximum as first as head */
+	private final TreeSet<PriceLevel> bids;
+	/** map containing all Bid-Prices and corresponding PriceLevel entry on the order book */
 	private final HashMap<Long, PriceLevel> bidMap;
 
-	private final PriorityQueue<PriceLevel> asks;
+	/** Sorted tree to store all ask prices with minimum as first as head */
+	private final TreeSet<PriceLevel> asks;
+	/** map containing all Ask-Prices and corresponding PriceLevel entry on the order book */
 	private final HashMap<Long, PriceLevel> askMap;
 
 	public OrderBook(int capacity) {
-		this.bids = new PriorityQueue<>(capacity, new PriceMaxComparator());
+		this.bids = new TreeSet<>(new PriceMaxComparator());
 		this.bidMap = new HashMap<>(capacity);
 
-		this.asks = new PriorityQueue<>(capacity, new PriceMinComparator());
+		this.asks = new TreeSet<>(new PriceMinComparator());
 		this.askMap = new HashMap<>(capacity);
 
-		this.orderEntries = new HashMap<>();
-		this.orderStore = new HashMap<>();
+		this.orderEntries = new HashMap<>(capacity);
+		
 	}
 
 	public boolean addOrder(Order order) {
@@ -49,25 +51,15 @@ public class OrderBook {
 		else 
 			return removeOrder(order, asks, askMap);
 	}
-	/**
-	 * Add order to the book
-	 * 
-	 * @param order
-	 *            to be added to the book
-	 * @param queue
-	 *            price queue for the side
-	 * @param map
-	 *            price order map for the side
-	 */
-	private boolean addOrder(Order order, PriorityQueue<PriceLevel> queue,	HashMap<Long, PriceLevel> map) {
-		long price = (long)(order.getPrice() * Constants.MAX_DECIMAL_PRECISION);
-		if(orderStore.containsKey(order.getOrderId()))
-			return false;
-		
-		orderStore.put(order.getOrderId(), order);
 
+
+	private boolean addOrder(Order order, TreeSet<PriceLevel> queue,	HashMap<Long, PriceLevel> map) {
+		if(orderEntries.containsKey(order.getOrderId()))
+			return false;
+
+		long price = (long)(order.getPrice() * ExchangeConstants.MAX_DECIMAL_PRECISION);
 		if (map.containsKey(price)) {
-			// If price level already exists, add order to linked list
+			// If price level already exists, add order to end of the linked list
 			OrderEntry newOrderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), order.getPrice());
 			OrderEntry entry = orderEntries.get(map.get(price).orderEntry.orderId);
 			// Find last order
@@ -78,7 +70,7 @@ public class OrderBook {
 			newOrderEntry.setPrev(entry.getOrderId());
 			orderEntries.put(newOrderEntry.getOrderId(), newOrderEntry);
 		} else {
-			// If price level does not exists add new entry to map and queue
+			// If price level does not exists add new entry to map and set
 			PriceLevel priceLevel = new PriceLevel(price);
 			OrderEntry orderEntry =  new OrderEntry(order.getOrderId(), order.getQuantity(), order.getPrice());
 			orderEntries.put(order.getOrderId(), orderEntry);
@@ -89,22 +81,12 @@ public class OrderBook {
 		return true;
 	}
 
-	/**
-	 * Remove order from the order book
-	 * 
-	 * @param order
-	 *            to be removed from the book
-	 * @param queue
-	 *            price queue for the side
-	 * @param map
-	 *            price order map for the side
-	 */
-	private boolean removeOrder(Order order, PriorityQueue<PriceLevel> queue,
+
+	private boolean removeOrder(Order order, TreeSet<PriceLevel> queue,
 			HashMap<Long, PriceLevel> map) {
-		long price = (long)(order.getPrice() * Constants.MAX_DECIMAL_PRECISION);
-		if(!orderStore.containsKey(order.getOrderId()))
+		long price = (long)(order.getPrice() * ExchangeConstants.MAX_DECIMAL_PRECISION);
+		if(!orderEntries.containsKey(order.getOrderId()))
 			return false;
-		
 		
 		if(!map.containsKey(price)) {
 			return false;
@@ -136,7 +118,6 @@ public class OrderBook {
 			}
 			orderEntries.remove(orderEntry.getOrderId());
 		}
-		orderStore.remove(order.getOrderId());
 		return true;
 	}
 
@@ -167,7 +148,7 @@ public class OrderBook {
 					entry = orderEntries.get(entry.getNext());
 					totalQuantity = totalQuantity + entry.getAvailableQty();
 				}
-				buffer.append(totalQuantity + "@" + new Double(priceLevel.getPrice())/Constants.MAX_DECIMAL_PRECISION);
+				buffer.append(totalQuantity + "@" + new Double(priceLevel.getPrice())/ExchangeConstants.MAX_DECIMAL_PRECISION);
 				buffer.append("\t");
 			}
 			else
@@ -183,7 +164,7 @@ public class OrderBook {
 					entry = orderEntries.get(entry.getNext());
 					totalQuantity = totalQuantity + entry.getAvailableQty();
 				}
-				buffer.append(totalQuantity + "@" + new Double(priceLevel.getPrice())/Constants.MAX_DECIMAL_PRECISION);
+				buffer.append(totalQuantity + "@" + new Double(priceLevel.getPrice())/ExchangeConstants.MAX_DECIMAL_PRECISION);
 				buffer.append("\t");
 			}
 			else
@@ -218,8 +199,8 @@ public class OrderBook {
 	}
 	
 	private class PriceLevel{
-		final long price;
-		OrderEntry orderEntry;
+		private final long price;
+		private OrderEntry orderEntry;
 		
 		public PriceLevel(long price) {
 			this.price = price;

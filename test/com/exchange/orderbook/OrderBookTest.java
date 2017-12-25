@@ -4,117 +4,106 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import com.exchange.common.TestHelper;
 import com.exchange.data.Order;
-import com.exchange.data.Side;
 
-class OrderBookTest {
-	public static int ORDER_ID = 0;
-	
-	public static int getOrderId() {
-		return ORDER_ID++;
+class OrderBookTest extends TestHelper{
+	private void addOrderToBookWithSuccess(Order order, OrderBook book) {
+		assertEquals(true, book.addOrder(order));
 	}
 
-	private Order createBuyOrder(long qty, double price) {
-		return new Order(getOrderId(), "0001.HK", Side.Buy, qty, price);
+	private void addOrderToBookWithFailure(Order order, OrderBook book) {
+		assertEquals(false, book.addOrder(order));
 	}
-	
-	private Order createSellOrder(long qty, double price) {
-		return new Order(getOrderId(), "0001.HK", Side.Sell, qty, price);
-	}
-	
-	private void compare(String expected, OrderBook book) {
-		System.out.println(book);
-		assertEquals(trimmedString(expected), trimmedString(book.toString()));
-	}
-	
-	private String trimmedString(String str) {
-		return str.replaceAll(" ", "").replaceAll("\t", "").replaceAll("\n", "");
-	}
-	
+
 	@Test
 	void testDuplicateOrder() {
-		OrderBook book = new OrderBook(10);
+		OrderBook orderBook = new OrderBook(10);
 		Order order = createBuyOrder(2000, 100.0004);
-		assertEquals(true, book.addOrder(order));
-		assertEquals(false,book.addOrder(order));
+		addOrderToBookWithSuccess(order, orderBook);
+		
+		assertOrderBookAsExpected("Buy				|	Sell \n" + 
+				"2000@100.0004	| 		   ", orderBook);
+		
+		addOrderToBookWithFailure(order, orderBook);
 
-		compare("Buy				|	Sell \n" + 
-				"2000@100.0004	| 		   ", book);
+		assertOrderBookAsExpected("Buy				|	Sell \n" + 
+				"2000@100.0004	| 		   ", orderBook);
 	}
-	
+
 	@Test
 	void testMultipleBuyOrder() {
-		OrderBook book = new OrderBook(10);
-		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0004)));
-		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0003)));
-		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0001)));
-		assertEquals(true, book.addOrder(createBuyOrder(2000, 100.0001)));
+		OrderBook orderBook = new OrderBook(10);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0004), orderBook);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0003), orderBook);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0001), orderBook);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0001), orderBook);
 
-		compare("Buy				|	Sell \n" + 
+		assertOrderBookAsExpected("Buy				|	Sell \n" + 
 				"2000@100.0004	| 		 \n" + 
 				"2000@100.0003	| 		 \n" + 
-				"4000@100.0001	| 		   ", book);
+				"4000@100.0001	| 		   ", orderBook);
 	}
 
 	@Test
 	void testMultipleSellOrder() {
-		OrderBook book = new OrderBook(10);
-		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0001)));
-		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0001)));
-		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0002)));
-		assertEquals(true, book.addOrder(createSellOrder(2000, 100.0003)));
+		OrderBook orderBook = new OrderBook(10);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0001), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0001), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0002), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0003), orderBook);
 
-		compare("Buy		|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy		|	Sell			\n" + 
 				"		| 2000@100.0003	\n" + 
 				"		| 2000@100.0002	\n" + 
-				"		| 4000@100.0001	  ", book);
+				"		| 4000@100.0001	  ", orderBook);
 	}
 	
 	@Test
 	void testMultipleBuySellOrder() {
-		OrderBook book = new OrderBook(10);
-		book.addOrder(createBuyOrder(2000, 100.0004));
-		book.addOrder(createBuyOrder(2000, 100.0001) );
-		book.addOrder(createBuyOrder(2000, 100.0001) );
-		book.addOrder(createBuyOrder(2000, 100.0001));
+		OrderBook orderBook = new OrderBook(10);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0004), orderBook);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0001), orderBook);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0001), orderBook);
+		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0001), orderBook);
 		
-		book.addOrder(createSellOrder(2000, 100.0001));
-		book.addOrder(createSellOrder(2000, 100.0002));
-		book.addOrder(createSellOrder(2000, 100.0003));
-		book.addOrder(createSellOrder(2000, 100.0003));
-		book.addOrder(createSellOrder(2000, 100.0003));
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0001), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0002), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0003), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0003), orderBook);
+		addOrderToBookWithSuccess(createSellOrder(2000, 100.0003), orderBook);
 
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" + 
 				"		 		| 6000@100.0003	\n" + 
 				"		 		| 2000@100.0002	\n" + 
-				"6000@100.0001	| 2000@100.0001	", book);
+				"6000@100.0001	| 2000@100.0001	", orderBook);
 	}
 
 	@Test
 	void testOneOrderWithCancel() {
 		OrderBook book = new OrderBook(10);
 		Order order = createBuyOrder(2000, 100.0004);
-		assertEquals(true, book.addOrder(order));
+		addOrderToBookWithSuccess(order, book);
 		
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
 		assertEquals(true, book.cancelOrder(order));
-		compare("", book);
+		assertOrderBookAsExpected("", book);
 	}
 	
 	@Test
 	void testOneOrderWithCancelWithInvalidId() {
 		OrderBook book = new OrderBook(10);
 		Order order = createBuyOrder(2000, 100.0004);
-		assertEquals(true, book.addOrder(order));
+		addOrderToBookWithSuccess(order, book);
 		
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
 		assertEquals(false, book.cancelOrder(createBuyOrder(2000, 100.0004)));
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 	}
 	
@@ -122,13 +111,13 @@ class OrderBookTest {
 	void testOneOrderCancelWithInvalidPrice() {
 		OrderBook book = new OrderBook(10);
 		Order order = createBuyOrder(2000, 100.0004);
-		assertEquals(true, book.addOrder(order));
+		addOrderToBookWithSuccess(order, book);
 		
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
 		assertEquals(false, book.cancelOrder(new Order(order.getOrderId(), order.getSymbol(), order.getSide(), order.getQuantity(), 100.00)));
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 	}
 	
@@ -138,16 +127,16 @@ class OrderBookTest {
 		Order o1 = createBuyOrder(2000, 100.0004);
 		Order o2 = createBuyOrder(2000, 100.0004);
 		Order o3 = createBuyOrder(2000, 100.0004); 
-		assertEquals(true, book.addOrder(o1));
-		assertEquals(true, book.addOrder(o2));
-		assertEquals(true, book.addOrder(o3));
+		addOrderToBookWithSuccess(o1, book);
+		addOrderToBookWithSuccess(o2, book);
+		addOrderToBookWithSuccess(o3, book);
 		
 		
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
 		assertEquals(true, book.cancelOrder(o1));
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
 	}
 	
@@ -157,16 +146,15 @@ class OrderBookTest {
 		Order o1 = createBuyOrder(2000, 100.0004);
 		Order o2 = createBuyOrder(2000, 100.0004);
 		Order o3 = createBuyOrder(2000, 100.0004); 
-		book.addOrder(o1);
-		book.addOrder(o2);
-		book.addOrder(o3);
+		addOrderToBookWithSuccess(o1, book);
+		addOrderToBookWithSuccess(o2, book);
+		addOrderToBookWithSuccess(o3, book);
 		
-		
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		book.cancelOrder(o2);
-		compare("Buy				|	Sell			\n" + 
+		assertEquals(true, book.cancelOrder(o2));
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
 	}
 	
@@ -176,16 +164,16 @@ class OrderBookTest {
 		Order o1 = createBuyOrder(2000, 100.0004);
 		Order o2 = createBuyOrder(2000, 100.0004);
 		Order o3 = createBuyOrder(2000, 100.0004); 
-		book.addOrder(o1);
-		book.addOrder(o2);
-		book.addOrder(o3);
+		addOrderToBookWithSuccess(o1, book);
+		addOrderToBookWithSuccess(o2, book);
+		addOrderToBookWithSuccess(o3, book);
 		
 		
-		compare("Buy				|	Sell			\n" + 
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		book.cancelOrder(o3);
-		compare("Buy				|	Sell			\n" + 
+		assertEquals(true, book.cancelOrder(o3));
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
 	}
 	
@@ -197,38 +185,39 @@ class OrderBookTest {
 		Order b3 = createBuyOrder(2000, 100.0004);
 		Order b4 = createBuyOrder(2000, 100.0005);
 		Order b5 = createBuyOrder(2000, 100.0005);
-		book.addOrder(b1);
-		book.addOrder(b2);
-		book.addOrder(b3);
-		book.addOrder(b4);
-		book.addOrder(b5);
+		addOrderToBookWithSuccess(b1, book);
+		addOrderToBookWithSuccess(b2, book);
+		addOrderToBookWithSuccess(b3, book);
+		addOrderToBookWithSuccess(b4, book);
+		addOrderToBookWithSuccess(b5, book);
 		
 		Order s1 = createSellOrder(2000, 100.0006);
 		Order s2 = createSellOrder(2000, 100.0006);
 		Order s3 = createSellOrder(2000, 100.0006);
 		Order s4 = createSellOrder(2000, 100.0005);
 		Order s5 = createSellOrder(2000, 100.0004);
-		book.addOrder(s1);
-		book.addOrder(s2);
-		book.addOrder(s3);
-		book.addOrder(s4);
-		book.addOrder(s5);
-		compare("Buy				|	Sell			\n" + 
+		addOrderToBookWithSuccess(s1, book);
+		addOrderToBookWithSuccess(s2, book);
+		addOrderToBookWithSuccess(s3, book);
+		addOrderToBookWithSuccess(s4, book);
+		addOrderToBookWithSuccess(s5, book);
+		
+		assertOrderBookAsExpected("Buy				|	Sell			\n" + 
 				"		 		| 6000@100.0006	\n" + 
 				"4000@100.0005	| 2000@100.0005	\n" + 
 				"6000@100.0004	| 2000@100.0004	", book);
 		
-		book.cancelOrder(b1);
-		book.cancelOrder(s1);
-		book.cancelOrder(b2);
-		book.cancelOrder(s2);
-		book.cancelOrder(b3);
-		book.cancelOrder(s3);
-		book.cancelOrder(b4);
-		book.cancelOrder(s4);
-		book.cancelOrder(b5);
-		book.cancelOrder(s5);
+		assertEquals(true, book.cancelOrder(b1));
+		assertEquals(true, book.cancelOrder(s1));
+		assertEquals(true, book.cancelOrder(b2));
+		assertEquals(true, book.cancelOrder(s2));
+		assertEquals(true, book.cancelOrder(b3));
+		assertEquals(true, book.cancelOrder(s3));
+		assertEquals(true, book.cancelOrder(b4));
+		assertEquals(true, book.cancelOrder(s4));
+		assertEquals(true, book.cancelOrder(b5));
+		assertEquals(true, book.cancelOrder(s5));
 		
-		compare("", book);
+		assertOrderBookAsExpected("", book);
 	}
 }

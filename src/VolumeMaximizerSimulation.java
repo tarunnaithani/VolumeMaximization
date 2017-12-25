@@ -1,10 +1,12 @@
-package com.exchange;
 
+
+import com.exchange.Exchange;
+import com.exchange.algo.VolumeMaximizationAlgo;
 import com.exchange.data.Order;
 import com.exchange.data.Side;
-import com.exchange.util.NormalDistribution;
+import com.exchange.util.NormalDistributionHelper;
 
-public class ProblemRunner {
+public class VolumeMaximizerSimulation {
 	public static int DEFAULT_ORDER_ID = 0;
 	public static final String DEFAULT_SYMBOL = "0005.HK";
 
@@ -16,7 +18,7 @@ public class ProblemRunner {
 	public static final double STD_DEV_QTY_DISTRIBUTION = 20000.0;
 
 	public static void main(String[] args) {
-		Exchange exchange = new Exchange();	
+		Exchange exchange = new Exchange();
 
 		for (int i = 0; i < 10; i++) {
 			for (Side side :Side.values()) {
@@ -26,12 +28,12 @@ public class ProblemRunner {
 			}
 		}
 		
-
+		exchange.executeMatchingAlgo(new VolumeMaximizationAlgo());
 	}
 
 	public static Order createOrderFromDistribution(Side side) {
-		long qty = NormalDistribution.getLong(STD_DEV_QTY_DISTRIBUTION, MEAN_QTY_DISTRIBUTION);
-		double price = NormalDistribution.getDouble(STD_DEV_PRICE_DISTRIBUTION, MEAN_PRICE_DISTRIBUTION, DEFAULT_PRICE_PRECISION);
+		long qty = NormalDistributionHelper.getLong(MEAN_QTY_DISTRIBUTION, STD_DEV_QTY_DISTRIBUTION);
+		double price = NormalDistributionHelper.getDoubleWithPrecision(MEAN_PRICE_DISTRIBUTION, STD_DEV_PRICE_DISTRIBUTION, DEFAULT_PRICE_PRECISION);
 		
 		return new Order(++DEFAULT_ORDER_ID, DEFAULT_SYMBOL, side, qty, price);
 	}
