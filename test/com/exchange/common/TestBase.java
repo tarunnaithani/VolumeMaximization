@@ -24,8 +24,12 @@ public abstract class TestBase {
 	}
 
 	public final void assertOrderBookAsExpected(String expected, OrderBook book) {
-		System.out.println(book.printBook(DECIMAL_PRECISION));
-		assertEquals(trimmedString(expected), trimmedString(book.printBook(DECIMAL_PRECISION)));
+		assertOrderBookAsExpected(expected, book, DECIMAL_PRECISION);
+	}
+	
+	public final void assertOrderBookAsExpected(String expected, OrderBook book, int decimalPrecision) {
+		System.out.println(book.printBook(decimalPrecision));
+		assertEquals(trimmedString(expected), trimmedString(book.printBook(decimalPrecision)));
 	}
 	
 	public final String trimmedString(String str) {

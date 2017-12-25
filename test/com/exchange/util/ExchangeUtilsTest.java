@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 class ExchangeUtilsTest {
 
 	@Test
-	void testDoubleConversion() {
+	void testDoubleConversion() { 
 		assertEquals(10009999, ExchangeUtils.convertPriceToDouble(10009999l, 0));
 		assertEquals(1000999.9, ExchangeUtils.convertPriceToDouble(10009999l, 1));
 		assertEquals(100099.99, ExchangeUtils.convertPriceToDouble(10009999l, 2));

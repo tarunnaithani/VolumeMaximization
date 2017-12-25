@@ -49,10 +49,10 @@ class ExchangeTest extends TestBase{
 
 	@Test
 	void testMaxMinDecimalPrecisionInPrice() {
-		Exchange exchange = new Exchange();
+		Exchange exchange = new Exchange(5);
 		
-		double minPrecision = (double)1/Math.pow(10, DECIMAL_PRECISION);
-		double maxPrecision = (double)1/(Math.pow(10, DECIMAL_PRECISION) * 10) - minPrecision;
+		double minPrecision = (double)1/Math.pow(10, 5);
+		double maxPrecision = (double)1/(Math.pow(10, 5) * 10) - minPrecision;
 		double minPrice = 1 + minPrecision;
 		double maxPrice = 1 + maxPrecision;
 		
@@ -62,9 +62,9 @@ class ExchangeTest extends TestBase{
 		exchange.sendOrder(createSellOrder(2000, minPrice));
 		exchange.sendOrder(createSellOrder(2000, maxPrice));
 		assertOrderBookAsExpected(
-				"Buy		 		|	Sell\n" + 
-				"2000@1.0001	 	| 2000@1.0001	\n" + 
-				"2000@0.9999	 	| 2000@0.9999", exchange.getBookForSymbol(DEFAULT_SYMBOL));
+				"Buy		 		|	Sell			\n" + 
+				"2000@1.00001 	| 2000@1.00001	\n" + 
+				"2000@0.99999 	| 2000@0.99999", exchange.getBookForSymbol(DEFAULT_SYMBOL), 5);
 	}
 	
 	@Test

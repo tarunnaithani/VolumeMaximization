@@ -19,7 +19,7 @@ public class Exchange {
 	public static int DEFAULT_DECIMAL_PRECISION = 4;
 	
 	/** Initial capacity for price levels in an order book */
-	public static int DEFAULT_INITIAL_PRICE_LEVELS = 1000;
+	public static int DEFAULT_INITIAL_ORDERBOOK_CAPACITY = 1000;
 
 	/** Initial capacity for number of order books */
 	public static int DEFAULT_INITIAL_SYMBOLS_COUNT = 1000;
@@ -30,8 +30,8 @@ public class Exchange {
 	/** Maximum precision supported by exchange */
 	private final int decimalPrecision;
 	
-	/** Initial number of price levels in Order book */
-	private final int priceLevels;
+	/** Initial capacity of order entries in Order book */
+	private final int orderBookCapacity;
 	
 	/**
 	 * Map to store orders live in exchange at any moment, stored them as key value
@@ -46,16 +46,16 @@ public class Exchange {
 	private final HashMap<String, OrderBook> symbolBooks;
 
 	public Exchange() {
-		this(DEFAULT_DECIMAL_PRECISION, DEFAULT_INITIAL_SYMBOLS_COUNT, DEFAULT_INITIAL_ORDERS_COUNT, DEFAULT_INITIAL_PRICE_LEVELS);
+		this(DEFAULT_DECIMAL_PRECISION, DEFAULT_INITIAL_SYMBOLS_COUNT, DEFAULT_INITIAL_ORDERS_COUNT, DEFAULT_INITIAL_ORDERBOOK_CAPACITY);
 	}
 
 	public Exchange(int decimalPrecision) {
-		this(decimalPrecision, DEFAULT_INITIAL_SYMBOLS_COUNT, DEFAULT_INITIAL_ORDERS_COUNT, DEFAULT_INITIAL_PRICE_LEVELS);
+		this(decimalPrecision, DEFAULT_INITIAL_SYMBOLS_COUNT, DEFAULT_INITIAL_ORDERS_COUNT, DEFAULT_INITIAL_ORDERBOOK_CAPACITY);
 	}
 	
-	public Exchange(int decimalPrecision, int symbolCount, int orderCount, int priceLevels) {
+	public Exchange(int decimalPrecision, int symbolCount, int orderCount, int orderBookCapacity) {
 		this.decimalPrecision = decimalPrecision;
-		this.priceLevels = priceLevels;
+		this.orderBookCapacity = orderBookCapacity;
 		this.symbolBooks = new HashMap<String, OrderBook>(symbolCount);
 		this.orderStore = new HashMap<>(orderCount);
 	}
@@ -79,7 +79,7 @@ public class Exchange {
 
 		// If this is first order for symbol then create new OrderBook
 		if (!symbolBooks.containsKey(order.getSymbol()))
-			symbolBooks.put(order.getSymbol(), new OrderBook(priceLevels));
+			symbolBooks.put(order.getSymbol(), new OrderBook(orderBookCapacity));
 		OrderBook book = symbolBooks.get(order.getSymbol());
 
 		// Add order to the Order Book
