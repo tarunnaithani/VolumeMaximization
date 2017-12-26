@@ -21,8 +21,8 @@ class VolumeMaximizationAlgoTest extends TestBase{
 		
 		assertNotNull(volumeMax.name());
 		assertFalse(result.matched());
-		assertEquals(0, result.getMatchingVolume());
-		assertEquals(0.0, result.getMatchingPrice());		
+		assertEquals(0, result.getVolume());
+		assertEquals(0.0, result.getPrice());		
 	}
 
 	@Test
@@ -38,8 +38,8 @@ class VolumeMaximizationAlgoTest extends TestBase{
 		MatchingResult result = exchange.runMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
 		
 		assertFalse(result.matched());
-		assertEquals(0, result.getMatchingVolume());
-		assertEquals(0.0, result.getMatchingPrice());	
+		assertEquals(0, result.getVolume());
+		assertEquals(0.0, result.getPrice());	
 	}
 	
 	@Test
@@ -57,8 +57,8 @@ class VolumeMaximizationAlgoTest extends TestBase{
 		MatchingResult result = exchange.runMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
 		
 		assertFalse(result.matched());
-		assertEquals(0, result.getMatchingVolume());
-		assertEquals(0.0, result.getMatchingPrice());		
+		assertEquals(0, result.getVolume());
+		assertEquals(0.0, result.getPrice());		
 	}
 	
 
@@ -74,8 +74,8 @@ class VolumeMaximizationAlgoTest extends TestBase{
 		
 		MatchingResult result = exchange.runMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
 		assertTrue(result.matched());
-		assertEquals(1000, result.getMatchingVolume());
-		assertEquals(100.0, ExchangeUtils.convertPriceToDouble(result.getMatchingPrice(), DECIMAL_PRECISION));		
+		assertEquals(1000, result.getVolume());
+		assertEquals(100.0, ExchangeUtils.convertPriceToDouble(result.getPrice(), DECIMAL_PRECISION));		
 	}
 
 	@Test
@@ -92,8 +92,8 @@ class VolumeMaximizationAlgoTest extends TestBase{
 		
 		MatchingResult result = exchange.runMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
 		assertTrue(result.matched());
-		assertEquals(4000, result.getMatchingVolume());
-		assertEquals(102.0, ExchangeUtils.convertPriceToDouble(result.getMatchingPrice(), DECIMAL_PRECISION));		
+		assertEquals(4000, result.getVolume());
+		assertEquals(102.0, ExchangeUtils.convertPriceToDouble(result.getPrice(), DECIMAL_PRECISION));		
 	}
 	
 	@Test
@@ -115,8 +115,8 @@ class VolumeMaximizationAlgoTest extends TestBase{
 		
 		MatchingResult result = exchange.runMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
 		assertTrue(result.matched());
-		assertEquals(2000, result.getMatchingVolume());
-		assertEquals(101.0, ExchangeUtils.convertPriceToDouble(result.getMatchingPrice(), DECIMAL_PRECISION));		
+		assertEquals(2000, result.getVolume());
+		assertEquals(101.0, ExchangeUtils.convertPriceToDouble(result.getPrice(), DECIMAL_PRECISION));		
 	}
 	
 	@Test
@@ -141,9 +141,9 @@ class VolumeMaximizationAlgoTest extends TestBase{
 		
 		MatchingResult result = exchange.runMatchingAlgo(volumeMax, DEFAULT_SYMBOL);
 		assertTrue(result.matched());
-		assertEquals(3000, result.getMatchingVolume());
-		assertEquals(100.0, ExchangeUtils.convertPriceToDouble(result.getMatchingPrice(), DECIMAL_PRECISION));		
-		List<Execution> exec = exchange.executeMatch(DEFAULT_SYMBOL, result.getMatchingPrice(), result.getMatchingVolume());
+		assertEquals(3000, result.getVolume());
+		assertEquals(100.0, ExchangeUtils.convertPriceToDouble(result.getPrice(), DECIMAL_PRECISION));		
+		List<Execution> exec = exchange.executeMatch(DEFAULT_SYMBOL, result.getPrice(), result.getVolume());
 	}	
 	
 }

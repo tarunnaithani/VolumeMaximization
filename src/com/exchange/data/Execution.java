@@ -1,5 +1,7 @@
 package com.exchange.data;
 
+import com.exchange.util.ExchangeUtils;
+
 /**
  * Class to store execution information
  */
@@ -57,10 +59,9 @@ public class Execution {
 		return execType;
 	}
 
-	@Override
-	public String toString() {
+	public String print(int decimalPrecision) {
 		return "Execution [executionId=" + executionId + ", orderId=" + orderId + ", quantity=" + quantity + ", price="
-				+ price + ", execType=" + execType + "]";
+				+ ExchangeUtils.convertPriceToDouble(price, decimalPrecision) + ", execType=" + execType + "]";
 	}
 	
 	

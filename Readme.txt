@@ -54,6 +54,7 @@ IMPORTANT CLASSES
 	and validating incoming order. It also provides central place to run matching algorithms on order books.  
 
 SYSTEM LIMITATIONS
+	-> classes are built assuming they will be run in Thread safe process
 	-> The code logs everything to Console 
 	-> Current system does lot of Object creation during operation which will cause GC issues if used in load testing.
 

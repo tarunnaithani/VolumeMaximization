@@ -23,11 +23,11 @@ public class MatchingResult {
 		return matched;
 	}
 
-	public long getMatchingPrice() {
+	public long getPrice() {
 		return matchingPrice;
 	}
 
-	public long getMatchingVolume() {
+	public long getVolume() {
 		return matchingVolume;
 	}
 

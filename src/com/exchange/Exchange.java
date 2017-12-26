@@ -18,8 +18,7 @@ import com.exchange.util.ExchangeUtils;
 
 /**
  * Main class to store Exchange related order books and information about order
- * received. It provides functions to send/cancel order to book.
- *
+ * received. It provides functions to send/cancel order to book and create executions.
  */
 public class Exchange {
 	
@@ -29,16 +28,10 @@ public class Exchange {
 	/** Initial capacity of order entries in Order book */
 	private final int orderBookCapacity;
 	
-	/**
-	 * Map to store orders live in exchange at any moment, stored them as key value
-	 * pair, OrderId -> Order
-	 */
+	/** Map to store orders live in exchange */
 	private final HashMap<Integer, Order> orderStore;
 	
-	/**
-	 * Map to store Order books live in exchange at any moment, stored them as key
-	 * value pair, Symbol -> OrderBook
-	 */
+	/** Map to store Order books live in exchange */
 	private final HashMap<String, OrderBook> symbolBooks;
 
 	public Exchange() {
@@ -57,8 +50,7 @@ public class Exchange {
 	}
 
 	/**
-	 * API call to send order to corresponding order book It also runs duplicate
-	 * check based on order information present with the exchange
+	 * API call to send order to corresponding order book
 	 * 
 	 * @param order
 	 *            order to be sent
@@ -81,10 +73,9 @@ public class Exchange {
 		// Add order to the Order Book
 		boolean retVal = book.addOrder(order, ExchangeUtils.convertPriceToLong(order.getPrice(), decimalPrecision));
 
-		// If addition to book success then add the order to store
+		// If addition to book is success then add the order to store
 		if (retVal)
 			orderStore.put(order.getOrderId(), order);
-
 		return retVal;
 	}
 
@@ -97,9 +88,7 @@ public class Exchange {
 	}
 
 	/**
-	 * API call to cancel order from corresponding order book It also runs
-	 * validation to check if order exists at exchange based on order information
-	 * present with the exchange
+	 * API call to cancel order from corresponding order book
 	 * 
 	 * @param order
 	 *            order to be sent
