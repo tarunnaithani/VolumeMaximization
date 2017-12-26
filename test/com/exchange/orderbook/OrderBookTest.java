@@ -96,6 +96,29 @@ class OrderBookTest extends TestBase{
 		List<Execution> execs = orderBook.execute(1000001l, 2000);
 		assertEquals(2, execs.size());
 	}
+	
+	@Test
+	void testMultipleBuySellOrdersAtSamePriceWithExecution() {
+		OrderBook orderBook = new OrderBook(10);
+		Order b1 = createBuyOrder(2000, 100.0004);
+		Order b2 = createBuyOrder(2000, 100.0004);
+		addOrderToBookWithSuccess(b1, orderBook);
+		addOrderToBookWithSuccess(b2, orderBook);
+		
+		Order s1= createSellOrder(2000, 100.0004);
+		addOrderToBookWithSuccess(s1, orderBook);
+			
+		assertOrderBookAsExpected(
+				"Buy				|	Sell			\n" + 
+				"4000@100.0004	 | 2000@100.0004	\n", orderBook);
+		List<Execution> execs = orderBook.execute(1000004, 2000);
+		assertEquals(2, execs.size());
+		assertEquals(execs.get(0).getOrderId(), b1.getOrderId());
+		assertEquals(execs.get(1).getOrderId(), s1.getOrderId());
+		assertOrderBookAsExpected(
+				"Buy				|	Sell			\n" + 
+				"2000@100.0004	 | 				\n", orderBook);
+	}
 
 	@Test
 	void testOneOrderWithCancel() {

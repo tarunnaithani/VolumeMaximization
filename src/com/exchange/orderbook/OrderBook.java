@@ -173,7 +173,7 @@ public class OrderBook {
 					removeOrder(entry, priceMap, entry.price);
 				matchVolume = matchVolume - execQty;
 				
-			}while (entry.next != -1) ;
+			}while (entry.next != -1 && matchVolume != 0) ;
 			if(matchVolume == 0)
 				break;
 		}
