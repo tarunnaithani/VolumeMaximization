@@ -33,8 +33,8 @@ Problem Simulation
 	VolumeMaximizerSimulation class runs as Java application in single thread and is responsible for running simulation 
 	requested in problem set.
 	It starts by creating an exchange instance with configured decimal precision, then sends buy and sell orders 
-	with configured time delay in between. Quantity and price for each order is drawn from Normal distribution with 
-	configured mean and standard deviation.
+	with 30 seconds time delay in between a set of buy and sell orders. Quantity and price for each order is drawn from 
+	Normal distribution with configured mean and standard deviation.
 	Once order sending operations to exchange are complete, VolumeMaximization Algorithm is run and if match is 
 	found, result is printed on console.
 	All simulation parameters are defined as static and can be modified to change behavior of simulation. 
