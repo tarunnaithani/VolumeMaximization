@@ -1,9 +1,17 @@
 package com.exchange;
 
+import static com.exchange.ExchangeConstants.DEFAULT_DECIMAL_PRECISION;
+import static com.exchange.ExchangeConstants.DEFAULT_INITIAL_ORDERBOOK_CAPACITY;
+import static com.exchange.ExchangeConstants.DEFAULT_INITIAL_ORDERS_COUNT;
+import static com.exchange.ExchangeConstants.DEFAULT_INITIAL_SYMBOLS_COUNT;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.exchange.algo.MatchingAlgo;
 import com.exchange.algo.MatchingResult;
+import com.exchange.data.Execution;
 import com.exchange.data.Order;
 import com.exchange.orderbook.OrderBook;
 import com.exchange.util.ExchangeUtils;
@@ -15,18 +23,6 @@ import com.exchange.util.ExchangeUtils;
  */
 public class Exchange {
 	
-	/** Initial capacity for price levels in an order book */
-	public static int DEFAULT_DECIMAL_PRECISION = 4;
-	
-	/** Initial capacity for price levels in an order book */
-	public static int DEFAULT_INITIAL_ORDERBOOK_CAPACITY = 1000;
-
-	/** Initial capacity for number of order books */
-	public static int DEFAULT_INITIAL_SYMBOLS_COUNT = 1000;
-
-	/** Initial capacity for Orders at Exchange */
-	public static int DEFAULT_INITIAL_ORDERS_COUNT = 1000;
-
 	/** Maximum precision supported by exchange */
 	private final int decimalPrecision;
 	
@@ -69,7 +65,7 @@ public class Exchange {
 	 * @return true if success, else false
 	 */
 	public boolean sendOrder(Order order) {
-		if (!validateOrder(order))
+		if (!validatePriceAndQty(order))
 			return false;
 		// Check if order id already exists
 		if (orderStore.containsKey(order.getOrderId()))
@@ -92,7 +88,7 @@ public class Exchange {
 		return retVal;
 	}
 
-	private boolean validateOrder(Order order) {
+	private boolean validatePriceAndQty(Order order) {
 		if (order.getPrice() <= 0)
 			return false;
 		if (order.getQuantity() <= 0)
@@ -118,7 +114,7 @@ public class Exchange {
 			return false;
 
 		OrderBook book = symbolBooks.get(order.getSymbol());
-		boolean retVal = book.cancelOrder(order, ExchangeUtils.convertPriceToLong(order.getPrice(), decimalPrecision));
+		boolean retVal = book.removeOrder(order, ExchangeUtils.convertPriceToLong(order.getPrice(), decimalPrecision));
 		// if removal success then remove from store as well
 		if (retVal)
 			orderStore.remove(order.getOrderId());
@@ -137,7 +133,7 @@ public class Exchange {
 	}
 
 	/**
-	 * API to run matching algorithm on a OrderBook
+	 * API to run matching algorithm on OrderBook for a symbol
 	 * 
 	 * @param exchangeAlgo
 	 *            Instance of Algorithm to be executed
@@ -145,10 +141,16 @@ public class Exchange {
 	 *            symbol for which order book needs to be retrieved
 	 * @return true if success, else false
 	 */
-	public MatchingResult executeMatchingAlgo(MatchingAlgo exchangeAlgo, String symbol) {
+	public MatchingResult runMatchingAlgo(MatchingAlgo exchangeAlgo, String symbol) {
 		if (symbolBooks.containsKey(symbol))
-			return exchangeAlgo.execute(symbolBooks.get(symbol), decimalPrecision);
-		return new MatchingResult(false, 0.0, 0);
+			return exchangeAlgo.execute(symbolBooks.get(symbol));
+		return new MatchingResult(false, 0, 0);
+	}
+	
+	public List<Execution> executeMatch(String symbol, long price, long quantity) {
+		if (symbolBooks.containsKey(symbol))
+			return symbolBooks.get(symbol).execute(price, quantity);
+		return new ArrayList<>();
 	}
 
 }

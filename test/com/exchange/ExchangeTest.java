@@ -80,9 +80,10 @@ class ExchangeTest extends TestBase{
 		
 		//Duplicate order
 		assertFalse(exchange.sendOrder(order));
-		assertOrderBookAsExpected("Buy		|	Sell		\n" + 
+		assertOrderBookAsExpected(
+				"Buy			|	Sell		\n" + 
 				"		 	| 1000@11.0	\n" + 
-				"1000@10.0	| 		 \n" , exchange.getBookForSymbol(DEFAULT_SYMBOL));
+				"1000@10.0	| 		 	" , exchange.getBookForSymbol(DEFAULT_SYMBOL));
 		
 		assertTrue(exchange.cancelOrder(order));
 	}
@@ -97,7 +98,7 @@ class ExchangeTest extends TestBase{
 			}
 			
 			@Override
-			public MatchingResult execute(OrderBook orderBook, int decimalPrecision) {
+			public MatchingResult execute(OrderBook orderBook) {
 				return new MatchingResult(true, 1000, 1000);
 			}
 		};
@@ -110,9 +111,9 @@ class ExchangeTest extends TestBase{
 								"		 	| 1000@11.0	\n" + 
 								"1000@10.0	| 		 \n" , exchange.getBookForSymbol(DEFAULT_SYMBOL));
 				
-		assertTrue(exchange.executeMatchingAlgo(algo, DEFAULT_SYMBOL).matched());
+		assertTrue(exchange.runMatchingAlgo(algo, DEFAULT_SYMBOL).matched());
 		
-		assertFalse(exchange.executeMatchingAlgo(algo, "0001.HK").matched());
+		assertFalse(exchange.runMatchingAlgo(algo, "0001.HK").matched());
 	}
 	
 	@Test

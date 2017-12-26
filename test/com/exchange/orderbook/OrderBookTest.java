@@ -2,10 +2,14 @@ package com.exchange.orderbook;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import com.exchange.common.TestBase;
+import com.exchange.data.Execution;
 import com.exchange.data.Order;
 import com.exchange.util.ExchangeUtils;
 
@@ -70,7 +74,7 @@ class OrderBookTest extends TestBase{
 	}
 	
 	@Test
-	void testMultipleBuySellOrdersAcceptedAtDifferentPrices() {
+	void testMultipleBuySellOrdersAcceptedAtDifferentPricesWithExecution() {
 		OrderBook orderBook = new OrderBook(10);
 		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0004), orderBook);
 		addOrderToBookWithSuccess(createBuyOrder(2000, 100.0001), orderBook);
@@ -89,6 +93,8 @@ class OrderBookTest extends TestBase{
 				"		 		| 6000@100.0003	\n" + 
 				"		 		| 2000@100.0002	\n" + 
 				"6000@100.0001	| 2000@100.0001	", orderBook);
+		List<Execution> execs = orderBook.execute(1000001l, 2000);
+		assertEquals(2, execs.size());
 	}
 
 	@Test
@@ -101,7 +107,7 @@ class OrderBookTest extends TestBase{
 				"Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		
-		assertTrue(book.cancelOrder(order, convertPrice(order)));
+		assertTrue(book.removeOrder(order, convertPrice(order)));
 		assertOrderBookAsExpected("", book);
 	}
 	
@@ -115,7 +121,7 @@ class OrderBookTest extends TestBase{
 				"Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
 		order = createBuyOrder(2000, 100.0004);
-		assertFalse(book.cancelOrder(order, convertPrice(order)));
+		assertFalse(book.removeOrder(order, convertPrice(order)));
 		assertOrderBookAsExpected(
 				"Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
@@ -132,7 +138,7 @@ class OrderBookTest extends TestBase{
 				"2000@100.0004	| 		 		\n" 	, book);
 		
 		order = new Order(order.getOrderId(), order.getSymbol(), order.getSide(), order.getQuantity(), 100.00);
-		assertFalse(book.cancelOrder(order, convertPrice(order)));
+		assertFalse(book.removeOrder(order, convertPrice(order)));
 		assertOrderBookAsExpected(
 				"Buy				|	Sell			\n" + 
 				"2000@100.0004	| 		 		\n" 	, book);
@@ -153,7 +159,7 @@ class OrderBookTest extends TestBase{
 				"Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		assertTrue(book.cancelOrder(o1, convertPrice(o1)));
+		assertTrue(book.removeOrder(o1, convertPrice(o1)));
 		assertOrderBookAsExpected(
 				"Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
@@ -173,7 +179,7 @@ class OrderBookTest extends TestBase{
 				"Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		assertTrue(book.cancelOrder(o2, convertPrice(o2)));
+		assertTrue(book.removeOrder(o2, convertPrice(o2)));
 		assertOrderBookAsExpected(
 				"Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
@@ -194,7 +200,7 @@ class OrderBookTest extends TestBase{
 				"Buy				|	Sell			\n" + 
 				"6000@100.0004	| 		 		", book);
 		
-		assertTrue(book.cancelOrder(o3, convertPrice(o3)));
+		assertTrue(book.removeOrder(o3, convertPrice(o3)));
 		assertOrderBookAsExpected(
 				"Buy				|	Sell			\n" + 
 				"4000@100.0004	| 		 		", book);
@@ -231,16 +237,16 @@ class OrderBookTest extends TestBase{
 				"4000@100.0005	| 2000@100.0005	\n" + 
 				"6000@100.0004	| 2000@100.0004	", book);
 		
-		assertTrue(book.cancelOrder(b1, convertPrice(b1)));
-		assertTrue(book.cancelOrder(s1, convertPrice(s1)));
-		assertTrue(book.cancelOrder(b2, convertPrice(b2)));
-		assertTrue(book.cancelOrder(s2, convertPrice(s2)));
-		assertTrue(book.cancelOrder(b3, convertPrice(b3)));
-		assertTrue(book.cancelOrder(s3, convertPrice(s3)));
-		assertTrue(book.cancelOrder(b4, convertPrice(b4)));
-		assertTrue(book.cancelOrder(s4, convertPrice(s4)));
-		assertTrue(book.cancelOrder(b5, convertPrice(b5)));
-		assertTrue(book.cancelOrder(s5, convertPrice(s5)));
+		assertTrue(book.removeOrder(b1, convertPrice(b1)));
+		assertTrue(book.removeOrder(s1, convertPrice(s1)));
+		assertTrue(book.removeOrder(b2, convertPrice(b2)));
+		assertTrue(book.removeOrder(s2, convertPrice(s2)));
+		assertTrue(book.removeOrder(b3, convertPrice(b3)));
+		assertTrue(book.removeOrder(s3, convertPrice(s3)));
+		assertTrue(book.removeOrder(b4, convertPrice(b4)));
+		assertTrue(book.removeOrder(s4, convertPrice(s4)));
+		assertTrue(book.removeOrder(b5, convertPrice(b5)));
+		assertTrue(book.removeOrder(s5, convertPrice(s5)));
 		
 		assertOrderBookAsExpected("", book);
 	}

@@ -1,10 +1,12 @@
 
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import com.exchange.Exchange;
 import com.exchange.algo.MatchingResult;
 import com.exchange.algo.VolumeMaximizationAlgo;
+import com.exchange.data.Execution;
 import com.exchange.data.Order;
 import com.exchange.data.Side;
 import com.exchange.util.ExchangeUtils;
@@ -64,12 +66,17 @@ public class VolumeMaximizerSimulation {
 
 		System.out.println(
 				"Order Book so far,\n" + exchange.getBookForSymbol(DEFAULT_SYMBOL).printBook(DECIMAL_PRECISION));
-		MatchingResult result = exchange.executeMatchingAlgo(new VolumeMaximizationAlgo(), DEFAULT_SYMBOL);
-		if (result.matched())
-			System.out.println(
-					"Match found, maximum volume," + result.getMatchingVolume() + " at price," + result.getMatchingPrice());
-		else
-			System.out.println("Match not found in book," + exchange.getBookForSymbol(DEFAULT_SYMBOL).printBook(DECIMAL_PRECISION));
+		MatchingResult result = exchange.runMatchingAlgo(new VolumeMaximizationAlgo(), DEFAULT_SYMBOL);
+		if (result.matched()) {
+			System.out.println("Match found, maximum volume," + result.getMatchingVolume() + " at price,"
+					+ result.getMatchingPrice());
+			List<Execution> executions = exchange.executeMatch(DEFAULT_SYMBOL, result.getMatchingPrice(),
+					result.getMatchingVolume());
+			for(Execution exec: executions)
+				System.out.println(exec);
+		} else
+			System.out.println("Match not found in book,"
+					+ exchange.getBookForSymbol(DEFAULT_SYMBOL).printBook(DECIMAL_PRECISION));
 	}
 
 	public static Order createOrderFromDistribution(Side side) {

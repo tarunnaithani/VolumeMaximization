@@ -4,10 +4,10 @@ import java.util.TreeSet;
 
 import com.exchange.data.Side;
 import com.exchange.orderbook.OrderBook;
-import com.exchange.util.ExchangeUtils;
 
 /**
- * Matching Algorithm to traverse through a given book and find highest price at which maximum volume can be matched 
+ * Matching Algorithm to traverse through a given book and find highest price at
+ * which maximum volume can be matched
  *
  */
 public class VolumeMaximizationAlgo implements MatchingAlgo {
@@ -20,11 +20,11 @@ public class VolumeMaximizationAlgo implements MatchingAlgo {
 	}
 
 	@Override
-	public MatchingResult execute(OrderBook orderBook, int decimalPrecision) {
+	public MatchingResult execute(OrderBook orderBook) {
 		long highestVolume = 0;
-		double matchingPrice = 0.0;
-		
-		//Get all prices from book in descending order 
+		long matchingPrice = 0;
+
+		// Get all prices from book in descending order
 		TreeSet<Long> allPrices = new TreeSet<>(Side.Buy.getComparator());
 		TreeSet<Long> bids = orderBook.getBids();
 		TreeSet<Long> asks = orderBook.getAsks();
@@ -32,26 +32,27 @@ public class VolumeMaximizationAlgo implements MatchingAlgo {
 		allPrices.addAll(asks);
 
 		for (Long price : allPrices) {
-			// At each price level get buy and sell qty available
+			// At each price level get buy and sell quantity available
 			long buyQty = 0;
-			for (Long bidPrice : bids.headSet(price, true)) 
+			for (Long bidPrice : bids.headSet(price, true))
 				buyQty = buyQty + orderBook.getAvailableBuyQtyAtPrice(bidPrice);
-			
+
 			long sellQty = 0;
-			for (Long askPrice : asks.headSet(price, true)) 
+			for (Long askPrice : asks.headSet(price, true))
 				sellQty = sellQty + orderBook.getAvailableSellQtyAtPrice(askPrice);
-			
-			//Quantity that can be matched is minimum of available buy and sell qty
+
+			// Quantity that can be matched is minimum of available buy and sell quantity
 			long totalMatchingQty = Math.min(buyQty, sellQty);
 
-			//If new volume is higher than previously seen volume and use it as maximum along with price
+			// If new volume is higher than previously seen volume and use it as maximum
+			// along with price
 			if (totalMatchingQty > highestVolume) {
 				highestVolume = totalMatchingQty;
-				matchingPrice = ExchangeUtils.convertPriceToDouble(price, decimalPrecision);
+				matchingPrice = price;
 			}
 		}
 
-		if (matchingPrice > 0 && highestVolume > 0)
+		if (highestVolume > 0)
 			return new MatchingResult(true, matchingPrice, highestVolume);
 		else
 			return new MatchingResult(false, matchingPrice, highestVolume);

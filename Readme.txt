@@ -28,6 +28,8 @@ OrderBook data-structure
 	For example, if buy orders were received as b1, b2 and b3 at same price P.
 	Then price P will have mapping to OrderEntry for b1 and internally b1 will contain link to b2 and 
 	similarly b2 will contain link to b3. 
+	
+	All prices are maintained as long based on normalization done by exchange
 
 Problem Simulation	
 	VolumeMaximizerSimulation class runs as Java application in single thread and is responsible for running simulation 
@@ -36,7 +38,8 @@ Problem Simulation
 	with 30 seconds time delay in between a set of buy and sell orders. Quantity and price for each order is drawn from 
 	Normal distribution with configured mean and standard deviation.
 	Once order sending operations to exchange are complete, VolumeMaximization Algorithm is run and if match is 
-	found, result is printed on console.
+	found, result is printed on console along with executions.
+	
 	All simulation parameters are defined as static and can be modified to change behavior of simulation. 
 
 
@@ -52,12 +55,9 @@ IMPORTANT CLASSES
 
 SYSTEM LIMITATIONS
 	-> The code logs everything to Console 
-
-	-> Current system does lot of Object creation during operation which will cause GC issues if used in load testing.If capacity 
-	requirements are deterministic then further tuning can be done to avoid Object creation during simulation operation entirely.
+	-> Current system does lot of Object creation during operation which will cause GC issues if used in load testing.
 
 FURTHER DEVELOPMENT
-	-> Execution printing to fill orders
 	-> Tick bands in prices as penalty to beat time priority is limited by decimal precision configured at exchange level 
 
 TESTING
@@ -72,5 +72,5 @@ TESTING
 -> TestBase has common code like asserting order book after orders have been added to it, common create order methods for Buy and Sell orders
 
 SYSTEM REQUIREMENT
-	-> Minimum JDK version 1.7, 1.8 preferred as it is configured at project level
-	-> Minimum Junit 4, Junit 5 preferred as it is configured at project level 
+	Minimum JDK version 1.7, 1.8 preferred as it is configured at project level
+	Minimum JUnit 4, JUnit 5 preferred as it is configured at project level 
